@@ -32,6 +32,9 @@ meta_CHE <- read_csv("Data/RangeX_clean_MetadataFocal_CHE.csv")
 meta_NOR <- read_csv("Data/RangeX_metadata_focal_NOR.csv")
 
 
+# merge metadata with phenology -------------------------------------------
+
+pheno_22_CHE <- left_join(meta_CHE, pheno_che, by = c("unique_plant_ID", "species"))
 
 
 
