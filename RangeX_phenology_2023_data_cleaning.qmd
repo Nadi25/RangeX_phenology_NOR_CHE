@@ -1,0 +1,360 @@
+---
+title: "RangeX_phenology_2023_data_cleaning"
+author: "Nadine Arzt"
+format: html
+editor: visual
+date: 26.02.2024
+---
+
+## RangeX phenology 2023 data cleaning
+
+Phenology data has been collected from Mai to October 2023. The number of buds, flowers and infructescences has been monitored in the field every other week.
+
+### Load library
+
+```{r}
+library(tidyr)
+library(dplyr)
+library(readxl)
+library(readr)
+library(conflicted)
+library(janitor)
+library(lubridate)
+library(here)
+
+conflict_prefer_all("dplyr", quiet = TRUE)
+```
+
+### Import data
+
+```{r}
+## use read_delim from reader package
+
+phenology_low_raw <- read_excel(here("Data/Raw/RangeX_raw_phenology_low_2023.xlsx"),sheet = 2)
+head(phenology_low_raw)
+dput(colnames(phenology_low_raw))
+str(phenology_low_raw)
+
+phenology_high_raw <- read_excel(here("Data/Raw/RangeX_raw_phenology_high_2023.xlsx"), sheet = 2)
+head(phenology_high_raw)
+dput(colnames(phenology_high_raw))
+glimpse(phenology_high_raw)
+```
+
+### Combine low and high site
+
+```{r}
+# combine low site and high site ----------------------------------------------
+rangex_phenology_raw <- bind_rows(phenology_low_raw, phenology_high_raw)
+
+head(rangex_phenology_raw)
+str(rangex_phenology_raw)
+
+length(rangex_phenology_raw)
+dput(colnames(rangex_phenology_raw))
+
+# check for rows that only have NAs
+na_rows <- rangex_phenology_raw[rowSums(is.na(rangex_phenology_raw)) == ncol(rangex_phenology_raw), ]
+na_rows
+```
+
+### Clean column names
+
+```{r}
+rangex_phenology_raw <- clean_names(rangex_phenology_raw)
+colnames(rangex_phenology_raw)
+
+## rename column names to match with RangeX metadata file
+rangex_phenology_raw <- rangex_phenology_raw %>%
+  rename("block_ID_original" = "block_id",
+         "plot_ID_original" = "plot_id",
+         "position_ID_original" = "position_id")
+```
+
+### Change date format
+
+```{r}
+rangex_phenology_raw <- rangex_phenology_raw |> 
+  mutate(date = as.Date(date))
+```
+
+### Replace NAs with 0
+
+```{r}
+rangex_phenology_raw <- rangex_phenology_raw %>%
+  mutate_at(vars(number_buds, number_flowers, number_infructescences, seeds_collected), ~replace(., is.na(.), 0))
+```
+
+### Import metadata file for all countries
+
+```{r}
+meta_NOR <- read_csv("Data/RangeX_metadata_focal_NOR.csv")
+
+
+# 
+# ## can't load metadata as xlsx file, too many warnings and not loading correct
+# metadata <- read.csv2(here("Data/RangeX_Metadata.csv"))
+# head(metadata)
+# colnames(metadata)
+# 
+# ## clean column names
+# metadata <- clean_names(metadata)
+# 
+# ## filter only NOR
+# metadata_NOR <- metadata %>%
+#   dplyr::filter(grepl('NOR', region))
+# head(metadata_NOR)
+# str(metadata_NOR)
+
+```
+
+### Merge metadata and phenology data
+
+```{r}
+## merge with phenology data set
+rangex_phenology_raw <- left_join(rangex_phenology_raw, meta_NOR,
+                         by = c("region", "site", "block_ID_original", "plot_ID_original", "position_ID_original", "species"))
+```
+
+### Combined treatment column
+
+```{r}
+rangex_phenology_raw$treatment <- paste(rangex_phenology_raw$site, rangex_phenology_raw$treat_warming, rangex_phenology_raw$treat_competition, sep = "_")
+
+colnames(rangex_phenology_raw)
+```
+
+### Problems to fix
+
+1.  For cennig, we only counted stems and not flowers. So this is different to the rest.
+
+    --\> We know how many flowers we have per stem at peak season, when we did the demographic trait measurements.
+
+2.  Cennig: can have more seeds collected then infructescences, because one stem has multiple flowers
+
+3.  Seeds collected:
+
+    --\> When seeds have been collected, they obviously can't be counted as infructescences anymore next time.
+
+    --\> So we have to add the number of collected seeds to the number of infructescences for the next date.
+
+    --\> If 3 seeds have been collected on 27.09.23, we have to add 3 to infructescences on 10.10.23
+
+    --\> Can we specify that when the last seed has been collected, the next date does not get more seeds added to the infructescences? Because then the plant is completely done
+
+4.  Sometimes we have several data points for e.g. buds very close, when not all plots have been observed at the same date
+
+    --\> create new date column with same date for one block of observations
+
+#### Fix seeds collected
+
+```{r}
+# Arrange the data by unique plant ID and date
+rangex_phenology_clean <- rangex_phenology_raw %>%
+  arrange(unique_plant_ID, date) %>%
+  group_by(unique_plant_ID) %>%
+  mutate(
+    # Use cumsum to sum up seeds collected in previous dates
+    cumsum_seeds_collected = cumsum(seeds_collected),
+    # Adjust the number of infructescences by adding the cumsum of seeds collected
+    number_infructescences_adj = number_infructescences + lag(cumsum_seeds_collected, default = 0)
+  ) %>%
+  ungroup()
+
+## rename number infructescences and delete old column
+rangex_phenology_clean <- rangex_phenology_clean %>%
+  rename("number_infructescences_old" = "number_infructescences",
+         "number_infructescences" = "number_infructescences_adj")
+
+## delete number_infructescences_old, cumsum_seeds_colleted
+rangex_phenology_clean <- rangex_phenology_clean |> 
+  select(-c(number_infructescences_old, cumsum_seeds_collected))
+```
+
+#### Fix date
+
+```{r}
+## change date name to date_old
+rangex_phenology_clean <- rangex_phenology_clean %>%
+  rename("date_old" = "date")
+
+## count how many measurements per day to see which date needs fixing
+count <- count(rangex_phenology_clean,date_old, site)
+count
+
+## these dates need fixing
+## low site: 11.09 and 13.09 need to be together --> 13.09.2023
+## high site: 15./17./18./19.07 --> 18.07.2023
+## hi: 17./18.08 --> 18.08.2023
+## hi: 29./30.08 --> 29.08.2023
+
+rangex_phenology_clean <- rangex_phenology_clean |> 
+  mutate(date = case_when(
+    # For the low site where date is 2023-09-11, change it to 2023-09-13
+    site == "lo" & date_old == "2023-09-11" ~ as.Date("2023-09-13"),
+    # For the high site where date is 15./17./18./19.07, change it to 18.07.2023
+    site == "hi" & date_old %in% c("2023-07-15", "2023-07-17", "2023-07-19") ~ as.Date("2023-07-18"),
+    # For the high site where date is 17./18.08, change it to 18.08.2023
+    site == "hi" & date_old == "2023-08-17" ~ as.Date("2023-08-18"),
+    # For the high site where date is 29./30.08, change it to 29.08.2023
+    site == "hi" & date_old == "2023-08-30" ~ as.Date("2023-08-29"),
+    # For all other cases, keep the original date
+    .default = date_old
+  ))
+
+count_new <- count(rangex_phenology_clean, date, site)
+count_new
+
+## delete date_old
+rangex_phenology_clean <- rangex_phenology_clean |> 
+  select(-date_old)
+
+```
+
+### Save clean file
+
+```{r}
+# write_rds(rangex_phenology_clean, "Data/RangeX_clean_phenology_2023.rds")
+# 
+# saveRDS(rangex_phenology_clean, "Data/RangeX_clean_phenology_2023.rds")
+```
+
+```{r}
+# write.csv(rangex_phenology_clean, here("Data/RangeX_clean_phenology_2023.csv"), row.names = FALSE)
+# 
+# ## read cleaned data
+# rangex_raw_phenology <- read.csv(here("RangeX_raw_phenology_2023.csv"))
+# rangex_raw_phenology
+```
+
+### Fix Centaurea problem
+
+##### Import demographic traits low and high
+
+```{r}
+## import demographic traits data low
+rangex_raw_demographic_traits_lo <- read_xlsx(here("Data/Raw/RangeX_raw_demographic_traits_low_2023.xlsx"), sheet = 2)
+
+## import demographic traits data high
+rangex_raw_demographic_traits_hi <- read_xlsx(here("Data/Raw/RangeX_raw_demographic_traits_high_2023.xlsx"), sheet = 2)
+```
+
+##### Add column site and change block to numeric
+
+```{r}
+## lo: change block to numeric
+rangex_raw_demographic_traits_lo <- rangex_raw_demographic_traits_lo |> 
+  mutate(block = as.numeric(block))
+
+## add column with site
+rangex_raw_demographic_traits_lo <- rangex_raw_demographic_traits_lo |> 
+  mutate(site = "lo")
+
+rangex_raw_demographic_traits_hi <- rangex_raw_demographic_traits_hi |> 
+  mutate(site = "hi")
+```
+
+##### Combine low and high
+
+```{r}
+# combine low site and high site
+rangex_raw_demographic_traits <- bind_rows(rangex_raw_demographic_traits_lo, rangex_raw_demographic_traits_hi)
+```
+
+##### Rename columns to match with phenology
+
+```{r}
+rangex_raw_demographic_traits <- rangex_raw_demographic_traits |> 
+  rename("block_ID_original" = "block",
+         "plot_ID_original" = "treat",
+         "position_ID_original" = "coord",
+         "date_traits" = "date",
+         "comment_traits" = "comment")
+```
+
+##### Delete unnecessary columns
+
+```{r}
+rangex_raw_demographic_traits <- rangex_raw_demographic_traits |> 
+  select(-c(height_veg_cm, height_nathan_cm, height_veg_stretch_cm, height_rep_cm, height_rep_strech_cm, leaf_length_mm, petiole_length_mm, leaf_width_mm, no_leaves, sampled_quarter, herbivory_flower,herbivory_leaf, nathan_old_new, tillers_yes_no))
+```
+
+##### Replace NAs with 0
+
+```{r}
+# Columns to exclude from replacing NAs with 0
+columns_to_exclude <- c("block_ID_original", "plot_ID_original", "species", "position_ID_original", "date_traits", "observer", "scribe", "comment_traits", "site")
+
+# Replace NAs with 0 in all columns except the ones in columns_to_exclude
+rangex_raw_demographic_traits <- rangex_raw_demographic_traits %>%
+  mutate_at(vars(-all_of(columns_to_exclude)), ~replace(., is.na(.), 0))
+```
+
+##### Merge phenology with demographic traits
+
+```{r}
+## merge with phenology data set
+rangex_phenology_clean_demo_traits <- left_join(rangex_phenology_clean, rangex_raw_demographic_traits,
+                         by = c("site", "block_ID_original", "plot_ID_original", "position_ID_original", "species"))
+```
+
+##### Calculate sum of number of flowers from no_flowers_col...
+
+```{r}
+rangex_phenology_clean_demo_traits <- rangex_phenology_clean_demo_traits %>%
+  #group_by(unique_plant_id) %>%
+  mutate(sum_no_flowers = rowSums(select(., starts_with("no_flowers")), na.rm = TRUE))
+
+```
+
+##### Delete more unnecessary columns
+
+```{r}
+rangex_phenology_clean_demo_traits <- rangex_phenology_clean_demo_traits |> 
+  select(-starts_with("no_flowers"), -date_traits, -observer, -scribe, -comment_traits)
+
+```
+
+##### Calculate number per flower
+
+```{r}
+## 
+rangex_phenology_clean_demo_traits <- rangex_phenology_clean_demo_traits %>%
+  mutate(number_flowers_per_stem = sum_no_flowers / no_rep_stems)
+
+```
+
+##### Replace number_flowers with number_flowers_per_stem for cennig
+
+```{r}
+## rename column number of flowers to old
+rangex_phenology_clean_demo_traits <- rangex_phenology_clean_demo_traits |> 
+  rename("number_flowers_old" = "number_flowers")
+
+## for cennig I want to have number_flowers_old (= no_stems) * number_flower_per_stem to get the actual number of flowers
+rangex_phenology_clean_demo_traits <- rangex_phenology_clean_demo_traits |> 
+  mutate(number_flowers = case_when( species == "cennig"  & number_flowers_old != 0 ~ number_flowers_per_stem*number_flowers_old,
+    # For all other cases, keep the original no flowers
+    .default = number_flowers_old
+  ))
+```
+
+##### Delete columns for calculation of no flowers
+
+```{r}
+rangex_phenology_clean_demo_traits <- rangex_phenology_clean_demo_traits |>
+  select(-no_rep_stems, -sum_no_flowers, -number_flowers_per_stem, -number_flowers_old)
+```
+
+### Pivot longer the data
+
+```{r}
+rangex_phenology_clean_long <- rangex_phenology_clean_demo_traits |> 
+  pivot_longer(cols = c(number_buds, number_flowers, number_infructescences, seeds_collected),
+               names_to = "Stage",
+               values_to = "value")
+
+# Arrange the dataframe
+rangex_phenology_clean_long <- rangex_phenology_clean_long |> 
+  arrange(unique_plant_ID, date)
+```
