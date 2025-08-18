@@ -3,6 +3,7 @@ title: "RangeX_phenology_2023_#buds_flowers_infructescences"
 author: "Nadine Arzt"
 format: html
 editor: visual
+message: false
 ---
 
 ### 
@@ -16,6 +17,8 @@ library(tidyverse)
 library(conflicted)
 library(RColorBrewer)
 library(viridis)
+library(ggpubr)
+
 
 conflict_prefer_all("dplyr", quiet = TRUE)
 
@@ -545,3 +548,54 @@ ggsave(filename = "Output/Trifolium_buds_flowers_infructescences_2.png", plot = 
 ```
 
 Trifolium performes better at high site and doesn't care about competition.
+
+### Make pdf with all species and all stages
+
+```{r}
+# species list for NOR
+species_list_nor <- unique(phenology_clean_median_quant$species)
+
+# make plots for all species
+plots_nor <- map(species_list_nor, ~ {
+  dat <- filter(phenology_clean_median_quant, species == .x)
+  
+  ggplot(dat, aes(x = date)) +
+    geom_line(aes(y = median, color = Stage)) +
+    geom_ribbon(aes(y = median, ymin = lo, ymax = hi, fill = Stage), 
+                linewidth = 2, alpha = 0.5) +
+    facet_grid(rows = vars(site_treatment), cols = vars(competition)) +
+    labs(y = "Median +/- quantiles", x = "", title = .x) +
+    scale_color_manual(values = c("#00BB00FF", "#500050FF", "#FFBBFFFF")) +
+    scale_fill_manual(values = c("#00BB00FF", "#500050FF", "#FFBBFFFF")) +
+    theme(
+      legend.position = "top",
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.y = element_line(color = "gray", linewidth = 0.5),
+      panel.grid.minor.y = element_blank()
+    )
+})
+
+```
+
+#### One pdf per species
+
+```{r}
+# saves a pdf per species
+
+walk2(plots_nor, species_list_nor, ~ ggsave(
+  filename = paste0("Output/NOR_species_", .y, ".pdf"),
+  plot = .x,
+  width = 10, height = 8
+))
+
+```
+
+#### All species in one pdf
+
+```{r}
+ggexport(
+  plotlist = plots_nor,
+  filename = "Output/NOR_all_species_phenology.pdf",
+  width = 10, height = 8
+)
+```
