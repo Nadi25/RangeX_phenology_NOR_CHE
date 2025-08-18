@@ -4,14 +4,22 @@
 
 
 # import data -------------------------------------------------------------
-#' @param file path to a quarto or Rmarkdown file
-source_qmd <- function(file){
-  tmp <- tempfile()
-  knitr::purl(input = file, output = tmp)
-  source(tmp)
-}
+#' #' @param file path to a quarto or Rmarkdown file
+#' source_qmd <- function(file){
+#'   tmp <- tempfile()
+#'   knitr::purl(input = file, output = tmp)
+#'   source(tmp)
+#' }
+#' 
+#' source_qmd("RangeX_phenology_2023_data_cleaning.qmd")
 
-source_qmd("RangeX_phenology_2023_data_cleaning.qmd")
+# # Extract R code from a Quarto file
+# knitr::purl("RangeX_phenology_2023_data_cleaning.qmd", output = "RangeX_phenology_2023_data_cleaning_from_qmd.R")
+# 
+# # Then you can source it
+# source("RangeX_phenology_2023_data_cleaning_from_qmd.R")
+
+# need to run "RangeX_phenology_2023_data_cleaning.qmd" itself
 
 source("RangeX_phenology_NOR_CHE_data_exploration.R")
 
@@ -74,6 +82,82 @@ pdf("Output/Phenology_nor_all_species_presence_absence.pdf", width = 10, height 
 walk(plots_nor, print)
 dev.off()
 
+
+
+
+
+# flowering onset nor ---------------------------------------------------------
+flowering_onset_nor <- phenology_nor_pres_abs |> 
+  filter(Stage == "number_flowers", presence == 1) |>   # keep only flowering observations
+  group_by(species, unique_plant_ID, site_treatment) |> 
+  summarize(onset_date = min(date),  # first date flowering occurs
+            .groups = "drop")
+
+# plot flowering onset per species
+ggplot(flowering_onset_nor, aes(x = species, y = onset_date)) +
+  geom_jitter(width = 0.2, alpha = 0.5) +   # individual points
+  geom_boxplot(alpha = 0.3, outlier.shape = NA) +  # summary
+  labs(y = "Flowering onset (date)", x = "Species")
+
+# per treatment
+ggplot(flowering_onset_nor, aes(x = species, y = onset_date)) +
+  geom_boxplot() +
+  facet_wrap(~ site_treatment) +
+  labs(y = "Flowering onset (date)", x = "Species") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(flowering_onset_nor, aes(x = species, y = onset_date, fill = site_treatment)) +
+  geom_violin(alpha = 0.5) +
+  geom_jitter(width = 0.1, alpha = 0.4, size = 1) +
+  labs(y = "Flowering onset (date)", x = "Species")+
+  facet_wrap(~ site_treatment)
+
+# per species to see effect of treatment
+ggplot(flowering_onset_nor, aes(x = site_treatment, y = onset_date, fill = site_treatment)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_jitter(width = 0.1, alpha = 0.4, size = 1) +
+  facet_wrap(~ species, scales = "free_x") +  # one panel per species
+  labs(y = "Flowering onset (date)", x = "Treatment")
+
+
+
+# flowering onset che ---------------------------------------------------------
+# use pheno_22_CHE because this is already presence absence
+# in nor that needed to be changed first
+pheno_22_CHE <- pheno_22_CHE |> 
+  mutate(site_treatment = paste(site, treat_warming, treat_competition, sep = " "))
+
+flowering_onset_che <- pheno_22_CHE |> 
+  filter(phenology_stage == "No_FloOpen", value == 1) |>   # keep only flowering observations
+  group_by(species, unique_plant_ID, site_treatment) |> 
+  summarize(onset_date = min(date_measurement),  # first date flowering occurs
+            .groups = "drop")
+
+# plot flowering onset per species
+ggplot(flowering_onset_che, aes(x = species, y = onset_date)) +
+  geom_jitter(width = 0.2, alpha = 0.5) +   # individual points
+  geom_boxplot(alpha = 0.3, outlier.shape = NA) +  # summary
+  labs(y = "Flowering onset (date)", x = "Species")
+
+# per treatment
+ggplot(flowering_onset_che, aes(x = species, y = onset_date)) +
+  geom_boxplot() +
+  facet_wrap(~ site_treatment) +
+  labs(y = "Flowering onset (date)", x = "Species") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(flowering_onset_che, aes(x = species, y = onset_date, fill = site_treatment)) +
+  geom_violin(alpha = 0.5) +
+  geom_jitter(width = 0.1, alpha = 0.4, size = 1) +
+  labs(y = "Flowering onset (date)", x = "Species")+
+  facet_wrap(~ site_treatment)
+
+# per species to see effect of treatment
+ggplot(flowering_onset_che, aes(x = site_treatment, y = onset_date, fill = site_treatment)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_jitter(width = 0.1, alpha = 0.4, size = 1) +
+  facet_wrap(~ species, scales = "free_x") +  # one panel per species
+  labs(y = "Flowering onset (date)", x = "Treatment")
 
 
 
