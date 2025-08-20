@@ -194,6 +194,7 @@ ggplot(flowering_duration_nor, aes(x = site_treatment, y = duration, fill = site
   theme(legend.position = "none")
 
 # plot onset against duration
+# linear model
 onset_duration <- ggplot(flowering_duration_nor, aes(x = onset_date, y = duration, color = site_treatment)) +
   geom_point(alpha = 0.5, size = 1.5) +
   geom_smooth(method = "lm", se = TRUE) +  
@@ -202,6 +203,14 @@ onset_duration <- ggplot(flowering_duration_nor, aes(x = onset_date, y = duratio
 onset_duration
 
 ggsave(filename = "Output/Flowering_onset_vs_duration_NOR.png", plot = onset_duration, width = 15, height = 10, units = "in")
+
+# gam model
+onset_duration_gam_nor <- ggplot(flowering_duration_nor, aes(x = onset_date, y = duration, color = site_treatment)) +
+  geom_point(alpha = 0.5, size = 1.5) +
+  geom_smooth(method = "gam", se = TRUE) +  
+  labs(x = "Flowering onset (date)", y = "Flowering duration (days)")+
+  ggtitle("NOR")
+onset_duration_gam_nor
 
 
 
@@ -368,6 +377,7 @@ ggplot(flowering_duration_che, aes(x = site_treatment, y = duration, fill = site
   theme(legend.position = "none")
 
 # plot onset against duration
+# linear model
 onset_duration_che <- ggplot(flowering_duration_che, aes(x = onset_date, y = duration, color = site_treatment)) +
   geom_point(alpha = 0.5, size = 1.5) +
   geom_smooth(method = "lm", se = TRUE) +  
@@ -377,10 +387,15 @@ onset_duration_che
 
 ggsave(filename = "Output/Flowering_onset_vs_duration_CHE.png", plot = onset_duration_che, width = 15, height = 10, units = "in")
 
+# gam model
+onset_duration_che_gam <- ggplot(flowering_duration_che, aes(x = onset_date, y = duration, color = site_treatment)) +
+  geom_point(alpha = 0.5, size = 1.5) +
+  geom_smooth(method = "gam", se = TRUE) +  
+  labs(x = "Flowering onset (date)", y = "Flowering duration (days)")+
+  ggtitle("CHE")
+onset_duration_che_gam
 
-
-
-
+ggsave(filename = "Output/Flowering_onset_vs_duration_gam_CHE.png", plot = onset_duration_che_gam, width = 15, height = 10, units = "in")
 
 
 
