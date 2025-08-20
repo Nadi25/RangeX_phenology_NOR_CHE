@@ -8,27 +8,12 @@ library(lme4)
 
 
 # import data -------------------------------------------------------------
-#' #' @param file path to a quarto or Rmarkdown file
-#' source_qmd <- function(file){
-#'   tmp <- tempfile()
-#'   knitr::purl(input = file, output = tmp)
-#'   source(tmp)
-#' }
-#' 
-#' source_qmd("RangeX_phenology_2023_data_cleaning.qmd")
-
-# # Extract R code from a Quarto file
-# knitr::purl("RangeX_phenology_2023_data_cleaning.qmd", output = "RangeX_phenology_2023_data_cleaning_from_qmd.R")
-# 
-# # Then you can source it
-# source("RangeX_phenology_2023_data_cleaning_from_qmd.R")
 
 # need to run "RangeX_phenology_2023_data_cleaning.qmd" itself
 
 source("RangeX_phenology_NOR_CHE_data_exploration.R")
 
 # turn nor data into presence /absence ------------------------------------
-
 # NOR: phenology_clean
 phenology_nor_pres_abs <- phenology_clean |> 
   mutate(presence = ifelse(value > 0, 1, 0))
@@ -41,11 +26,6 @@ phenology_nor_proportions <- phenology_nor_pres_abs |>
   summarise(prop = mean(presence, na.rm = TRUE)*100, # to get %
             n = n(),
             .groups = "drop")
-
-# # then summarize by mean
-# phenology_nor_pres_abs_summary <- phenology_nor_pres_abs |> 
-#   group_by(species, date, site_treatment, treat_competition, Stage) |> 
-#   summarize(mean_pa = mean(presence), .groups = "drop")
 
 # subset of cennig --------------------------------------------------------
 phenology_nor_cennig <- phenology_nor_proportions |> 
@@ -63,10 +43,8 @@ ggplot(phenology_nor_cennig, aes(x = date)) +
 
 
 # loop through all species ------------------------------------------------
-
 # get species list
 species_list_nor <- unique(phenology_nor_proportions$species)
-
 
 # plot 
 plots_nor <- map(species_list_nor, ~ {
@@ -183,6 +161,47 @@ m1_n<- lmerTest::lmer(onset_julian ~ site_treatment + (1 | species) + (1 | block
 
 summary(m1_n)
 
+
+# flowering duration nor --------------------------------------------------
+# calculate first and last day of flowering and then duration
+flowering_duration_nor <- phenology_nor_pres_abs |> 
+  filter(Stage == "number_flowers", presence == 1) |>  # only flowering 
+  group_by(species, unique_plant_ID, site_treatment, block_ID) |> 
+  summarize(
+    onset_date = min(date),
+    end_date   = max(date),     # last day flowering observed
+    duration   = as.numeric(max(date) - min(date)) + 1, # include both ends
+    .groups = "drop"
+  )
+
+
+flowering_duration_nor_summary <- flowering_duration_nor |> 
+  group_by(site_treatment, species) |> 
+  summarize(
+    mean_duration = mean(duration),
+    sd_duration   = sd(duration),
+    n = n(),
+    .groups = "drop"
+  )
+
+
+ggplot(flowering_duration_nor, aes(x = site_treatment, y = duration, fill = site_treatment)) +
+  geom_violin(alpha = 0.5) +
+  geom_boxplot(width = 0.2, alpha = 0.2, outlier.shape = NA)+
+  geom_jitter(width = 0.2, alpha = 0.1, size = 1) +
+  labs(y = "Flowering daration (days)", x = "Treatment") +
+  theme(axis.text.x = element_text(hjust = 1))+
+  theme(legend.position = "none")
+
+# plot onset against duration
+onset_duration <- ggplot(flowering_duration_nor, aes(x = onset_date, y = duration, color = site_treatment)) +
+  geom_point(alpha = 0.5, size = 1.5) +
+  geom_smooth(method = "lm", se = TRUE) +  
+  labs(x = "Flowering onset (date)", y = "Flowering duration (days)")+
+  ggtitle("NOR")
+onset_duration
+
+ggsave(filename = "Output/Flowering_onset_vs_duration_NOR.png", plot = onset_duration, width = 15, height = 10, units = "in")
 
 
 
@@ -349,11 +368,14 @@ ggplot(flowering_duration_che, aes(x = site_treatment, y = duration, fill = site
   theme(legend.position = "none")
 
 # plot onset against duration
-ggplot(flowering_duration_che, aes(x = onset_date, y = duration, color = site_treatment)) +
+onset_duration_che <- ggplot(flowering_duration_che, aes(x = onset_date, y = duration, color = site_treatment)) +
   geom_point(alpha = 0.5, size = 1.5) +
   geom_smooth(method = "lm", se = TRUE) +  
-  labs(x = "Flowering onset (date)", y = "Flowering duration (days)") 
+  labs(x = "Flowering onset (date)", y = "Flowering duration (days)")+
+  ggtitle("CHE")
+onset_duration_che
 
+ggsave(filename = "Output/Flowering_onset_vs_duration_CHE.png", plot = onset_duration_che, width = 15, height = 10, units = "in")
 
 
 
