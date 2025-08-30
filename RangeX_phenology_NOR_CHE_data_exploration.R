@@ -22,8 +22,7 @@ library(tidyverse)
 library(purrr)
 
 
-# import phenology data che and nor ---------------------------------------
-# CHE
+# import phenology data CHE ---------------------------------------
 # Read as a single column of text
 raw <- read_lines("Data/RangeX_clean_Phenology_2022_CHE.csv")
 
@@ -37,29 +36,43 @@ write_lines(raw, "Data/RangeX_clean_Phenology_2022_CHE_clean.csv")
 # Now read normally
 pheno_che <- read_csv("Data/RangeX_clean_Phenology_2022_CHE_clean.csv")
 
-# NOR
-pheno_nor <- read.csv("Data/RangeX_clean_phenology_2023_NOR.csv")
+# import phenology data NOR ---------------------------------------
+# pheno_nor <- read.csv("Data/RangeX_clean_phenology_2023_NOR.csv")
 
+pheno_nor <- read.csv("Data/RangeX_clean_phenology_NOR_2023.csv", 
+                      row.names = 1)
 
 # import metadata CHE -----------------------------------------------------
-
 meta_CHE <- read_csv("Data/RangeX_clean_MetadataFocal_CHE.csv")
 
-meta_NOR <- read_csv("Data/RangeX_metadata_focal_NOR.csv")
+# import metadata NOR -----------------------------------------------------
+meta_NOR <- read.csv("Data/RangeX_metadata_focal_NOR.csv", row.names = 1)
 
 
 # merge metadata with phenology -------------------------------------------
-
+# CHE
 pheno_22_CHE <- left_join(meta_CHE, pheno_che, by = c("unique_plant_ID", "species"))
 
+# NOR
+pheno_23_NOR <- left_join(meta_NOR, pheno_nor, by = c("unique_plant_ID", "species"))
+# nor has column comment
+# delete for now?
+
+pheno_23_NOR <- pheno_23_NOR |> 
+  select(-comment)
 
 
+# one phenology data set -------------------------------------------------
+# combine CHE and NOR
+phenology <- rbind(pheno_22_CHE, pheno_23_NOR)
+
+
+# rename pheno stages to match regions ------------------------------------
 
 
 
 
 # che data exploration ----------------------------------------------------
-
 phenology_che_median_quant <- pheno_22_CHE |> 
   group_by(site, species, date_measurement, treat_warming, treat_competition, phenology_stage) |> 
   summarise(median = median(value),
@@ -83,7 +96,7 @@ ggplot(data = phenology_che_median_quant_flowers, aes(date_measurement, color = 
   facet_wrap(vars(species), nrow = 2, ncol = 5)+
   labs(y = "Median", x = "", title = "") +
   theme(legend.position = "top")+
-  scale_color_manual(values = flowers_colors)+
+  #scale_color_manual(values = flowers_colors)+
   scale_color_manual(values = c("#A50021", "#2482A1", "#F48400", "#33FFFF", "#606060", "#C0C0C0"), name = "Treatment")
 
 
