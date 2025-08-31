@@ -31,105 +31,101 @@ phenology_CHE <- phenology |>
 
 # NOR ---------------------------------------------------------------------
 # should we only use high site here? to test effect of warming?
-
-
-phenology_NOR_summary <- phenology_NOR  |> 
-  group_by(site, date_measurement, treat_warming, treat_competition, phenology_stage) |>
-  summarise(mean_abundance = mean(value, na.rm = TRUE),
-            sd_abundance = sd(value, na.rm = TRUE),
-            n = n()) |>
-  ungroup()
-
-phenology_NOR_summary |>
-  count(site, block_ID, date_measurement, phenology_stage, treat_warming)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# again -------------------------------------------------------------------
-
 library(dplyr)
-library(tidyr)
-library(ggplot2)
 
-# Step 0: check raw data
-head(phenology_NOR)
+# 1. Filter only the high site (where warming exists)
+phenology_hi <- phenology_NOR %>%
+  filter(site == "hi")
 
-# Step 1: Median per block × treatment × date × stage
-# Ensure each block × treatment × date × stage has ONE value
-pheno_block <- phenology_NOR |>
-  group_by(site, block_ID, date_measurement, phenology_stage,
-           treat_warming, treat_competition) |>
-  summarise(median_abundance = median(value, na.rm = TRUE),
-            .groups = "drop")
+# 2. Summarise within each plot (species x block x treatment x date)
+#    Here: take the mean number of structures across individuals
+phenology_summary <- phenology_hi %>%
+  group_by(block_ID, treat_competition, treat_warming, date_measurement, phenology_stage) %>%
+  summarise(mean_value = mean(value, na.rm = TRUE), .groups = "drop")
 
-# Check for duplicates (should be zero)
-pheno_block |>
-  count(site, block_ID, date_measurement, phenology_stage,
-        treat_warming, treat_competition) |>
-  filter(n > 1)
-
-# Step 2: Pivot wider to calculate warming effect
-# Keep only complete block × date × stage × competition combinations
-effect_block <- pheno_block |>
-  pivot_wider(
-    id_cols = c(site, block_ID, date_measurement, phenology_stage, treat_competition),
+# 3. Reshape to have Warm and Ambient side by side within each block/competition/species/date
+phenology_wide <- phenology_summary %>%
+  tidyr::pivot_wider(
     names_from = treat_warming,
-    values_from = median_abundance
-  ) |>
-  filter(!is.na(warm) & !is.na(ambi)) |>  # only rows with both treatments
+    values_from = mean_value
+  )
+
+# 4. Calculate warming effect (Warm - Ambient) per block/species/date/stage
+phenology_effect <- phenology_wide %>%
   mutate(effect_size = warm - ambi)
 
-# Step 3: Average across blocks for plotting
-effect_summary <- effect_block |>
-  group_by(site, date_measurement, phenology_stage, treat_competition) |>
+# 5. Average across blocks (with SE for error bars)
+phenology_effect_summary <- phenology_effect %>%
+  group_by(treat_competition,  date_measurement, phenology_stage) %>%
   summarise(
     mean_effect = mean(effect_size, na.rm = TRUE),
     se_effect   = sd(effect_size, na.rm = TRUE) / sqrt(n()),
-    n_blocks    = n(),       # how many blocks contributed
     .groups = "drop"
   )
 
-# Step 4: Plot
-ggplot(effect_summary,
-       aes(x = date_measurement, y = mean_effect,
-           color = phenology_stage, group = phenology_stage)) +
-  #geom_line() +
-  geom_point() +
-  geom_errorbar(aes(ymin = mean_effect - se_effect,
-                    ymax = mean_effect + se_effect),
-                width = 0.2) +
-  facet_wrap(~treat_competition) +
-  theme_minimal() +
-  labs(
-    y = "Effect size (Warm − Ambient)",
-    x = "Date",
-    color = "Phenology Stage"
+# 6. plot
+ggplot(phenology_effect_summary,
+       aes(x = mean_effect, 
+           y = treat_competition,
+           color = phenology_stage)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbarh(aes(xmin = mean_effect - se_effect,
+                     xmax = mean_effect + se_effect),
+                 height = 0.2,
+                 position = position_dodge(width = 0.5)) +
+  facet_wrap(~ date_measurement, ncol = 3) +
+  labs(x = "Effect size (Warm - Ambient)",
+       y = "Competition treatment",
+       color = "Phenology Stage")
+
+
+
+
+
+# average over the season -------------------------------------------------
+
+phenology_summary <- phenology_hi %>%
+  group_by(block_ID, treat_competition, treat_warming, phenology_stage) %>%
+  summarise(mean_value = mean(value, na.rm = TRUE), .groups = "drop")
+
+# 3. Reshape to have Warm and Ambient side by side within each block/competition/species/date
+phenology_wide <- phenology_summary %>%
+  tidyr::pivot_wider(
+    names_from = treat_warming,
+    values_from = mean_value
   )
+
+# 4. Calculate warming effect (Warm - Ambient) per block/species/date/stage
+phenology_effect <- phenology_wide %>%
+  mutate(effect_size = warm - ambi)
+
+# 5. Average across blocks (with SE for error bars)
+phenology_effect_summary <- phenology_effect %>%
+  group_by(treat_competition, phenology_stage) %>%
+  summarise(
+    mean_effect = mean(effect_size, na.rm = TRUE),
+    se_effect   = sd(effect_size, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+# 6. Plot: effect size of warming
+ggplot(phenology_effect_summary,
+       aes(x = mean_effect, 
+           y = treat_competition,
+           color = phenology_stage)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbarh(aes(xmin = mean_effect - se_effect,
+                     xmax = mean_effect + se_effect),
+                 height = 0.2,
+                 position = position_dodge(width = 0.5)) +
+  #facet_wrap(~ date_measurement, ncol = 3) +
+  labs(x = "Effect size (Warm - Ambient)",
+       y = "Competition treatment",
+       color = "Phenology Stage")
+
+
+
+
 
 
 
