@@ -77,9 +77,17 @@ phenology <- phenology |>
                                   "seeds_collected" = "No_Seeds"))
 
 
+# fix typo in che ---------------------------------------------------------
+# CHE.lo.ambi.bare.wf.10.22.1 silvul 2022-06-02 EI No_Buds 11 --> should be 1
+phenology <- phenology |>
+  mutate(value = replace(value,
+                         unique_plant_ID == "CHE.lo.ambi.bare.wf.10.22.1" &
+                           value == 11, 1))
+
+
 
 # save joint data set -----------------------------------------------------
-# write.csv(phenology, file = "Data/RangeX_clean_phenology_NOR_CHE.csv")
+#write.csv(phenology, file = "Data/RangeX_clean_phenology_NOR_CHE.csv")
 
 
 
