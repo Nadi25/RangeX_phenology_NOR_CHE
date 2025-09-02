@@ -15,18 +15,20 @@
 
 # load library ------------------------------------------------------------
 library(lme4)
-library(DHARMa)
 library(ggeffects)
 library(broom.mixed)
 library(emmeans)
-
-theme_set(theme_bw(base_size = 20))
 
 
 # load clean phenology data -----------------------------------------------
 source("RangeX_phenology_NOR_CHE_data_combination.R")
 
+# use this data set
 names(phenology)
+
+
+# set theme for plots for presentation ------------------------------------
+theme_set(theme_bw(base_size = 20))
 
 # Filter buds, flowers, infructescences -----------------------------------
 ## don't use seeds_collected
@@ -72,6 +74,8 @@ flowering_onset <- phenology_NOR_hi |>
   # remove groups where flowering never occurred
   filter(is.finite(onset))
 
+
+# model flowering onset nor lmer ------------------------------------------
 m_onset <- lmerTest::lmer(onset ~ treat_warming * treat_competition + (1|species) + (1|block_ID),
                 data = flowering_onset)
 summary(m_onset)
@@ -276,7 +280,6 @@ phenology_CHE_hi_infructescences <- subset(phenology_CHE_hi, phenology_stage == 
 
 
 # calculate flowering onset ------------------------------------------------
-
 flowering_onset_CHE <- phenology_CHE_hi |> 
   filter(phenology_stage == "No_FloOpen", value > 0) |>
   group_by(species, unique_plant_ID, block_ID, treat_warming, treat_competition) |>
@@ -284,6 +287,8 @@ flowering_onset_CHE <- phenology_CHE_hi |>
   # remove groups where flowering never occurred
   filter(is.finite(onset))
 
+
+# model flowering onset che lmer ------------------------------------------
 m_onset_che <- lmerTest::lmer(onset ~ treat_warming * treat_competition + (1|species) + (1|block_ID),
                           data = flowering_onset_CHE)
 summary(m_onset_che)
@@ -480,17 +485,19 @@ all_contrasts
 # warm - ambi -7.482268 3.951383 424.57 -15.248977  0.284440  -1.894  0.0590 CHE  
 
 
-# final plot --------------------------------------------------------------
+# final plot NOR and CHE -----------------------------------------------
 che_nor_plot <- ggplot(all_contrasts, aes(x = region, y = estimate, color = treat_competition)) +
-  geom_point(position = position_dodge(width = 0.3), size = 7) +
+  geom_point(position = position_dodge(width = 0.3), size = 11) +
   geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL),
-                width = 0.1, position = position_dodge(width = 0.3)) +
+                linewidth = 1,
+                width = 0.3, position = position_dodge(width = 0.3)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_text(aes(label = ifelse(p.value < 0.001, "***",
                                ifelse(p.value < 0.01, "**",
                                       ifelse(p.value < 0.05, "*", "n.s.")))),
-            position = position_dodge(width = 0.5),
-            vjust = -1.2, show.legend = FALSE) +
+            position = position_dodge(width = 0.6),
+            vjust = -1.2, show.legend = FALSE,
+            size = 6) +
   labs(x = "Region",
        y = "Δ days shifted flowering onset (warm - ambi)",
        title = "Effect of warming on flowering onset - CHE vs NOR",
