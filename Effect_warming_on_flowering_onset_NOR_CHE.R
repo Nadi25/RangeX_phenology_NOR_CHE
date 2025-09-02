@@ -16,7 +16,6 @@
 # load library ------------------------------------------------------------
 library(lme4)
 library(DHARMa)
-library(glmmTMB)
 library(ggeffects)
 library(broom.mixed)
 library(emmeans)
@@ -417,7 +416,7 @@ contr_df_che <- as.data.frame(confint(contr_che))
 
 
 # plot
-che_effect <- ggplot(contr_df, aes(x = treat_competition, y = estimate, color = treat_competition)) +
+che_effect <- ggplot(contr_df_che, aes(x = treat_competition, y = estimate, color = treat_competition)) +
   geom_point(size = 3) +
   geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
