@@ -1,6 +1,16 @@
 
 
-# Effect of warming -------------------------------------------------------
+# Effect of warming on flowering onset ---------------------------------------
+
+# RangeX phenology effect of warming NOR and CHE ------------
+
+## Data used: RangeX_clean_Phenology_2022_CHE.csv
+##            RangeX_clean_phenology_2023_NOR.csv
+##            RangeX_clean_MetadataFocal_CHE.csv
+##            RangeX_metadata_focal_NOR.csv
+## Date:      02.09.25
+## Author:    Nadine Arzt
+## Purpose:   Effect of warming on flowering onset NOR and CHE
 
 
 # load library ------------------------------------------------------------
@@ -13,6 +23,8 @@ library(emmeans)
 
 theme_set(theme_bw(base_size = 20))
 
+
+# load clean phenology data -----------------------------------------------
 source("RangeX_phenology_NOR_CHE_data_combination.R")
 
 names(phenology)
@@ -37,10 +49,8 @@ phenology_NOR_hi <- phenology_NOR |>
 
 
 # julian days -------------------------------------------------------------
-
 phenology_NOR_hi$jday <- as.numeric(phenology_NOR_hi$date_measurement)  # converts to days
 phenology_NOR_hi$jday_scaled <- scale(phenology_NOR_hi$jday)
-
 
 
 # split by phenology stage ------------------------------------------------
@@ -52,7 +62,6 @@ phenology_NOR_hi_flowers <- subset(phenology_NOR_hi, phenology_stage == "No_FloO
 
 # infructescences
 phenology_NOR_hi_infructescences <- subset(phenology_NOR_hi, phenology_stage == "number_infructescences")
-
 
 
 
@@ -228,13 +237,6 @@ contrast_df_nor
 # treat_competition = vege:
 #   contrast     estimate       SE     df  lower.CL   upper.CL t.ratio p.value
 # warm - ambi -2.996362 1.201769 692.15 -5.355912 -0.6368127  -2.493  0.0129
-
-
-
-
-
-
-
 
 
 
@@ -466,6 +468,17 @@ contrast_df_che$region <- "CHE"
 
 # combine
 all_contrasts <- bind_rows(contrast_df_nor, contrast_df_che)
+
+all_contrasts
+# treat_competition = bare:
+#   contrast     estimate       SE     df   lower.CL  upper.CL t.ratio p.value region
+# warm - ambi -3.614315 1.059456 691.57  -5.694451 -1.534179  -3.411  0.0007 NOR   
+# warm - ambi -6.372056 1.351822 422.78  -9.029185 -3.714927  -4.714  <.0001 CHE   
+# 
+# treat_competition = vege:
+#   contrast     estimate       SE     df   lower.CL  upper.CL t.ratio p.value region
+# warm - ambi -2.996362 1.201769 692.15  -5.355912 -0.636813  -2.493  0.0129 NOR   
+# warm - ambi -7.482268 3.951383 424.57 -15.248977  0.284440  -1.894  0.0590 CHE  
 
 
 # final plot --------------------------------------------------------------
