@@ -511,6 +511,165 @@ ggsave(filename = "Output/Flowering_onset_CHE_NOR_warming_effect_delta_days.png"
 
 
 
+ggplot(all_contrasts, aes(x = region, y = estimate, color = treat_competition)) +
+  geom_point(position = position_dodge(width = 0.3), size = 11) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL),
+                linewidth = 1,
+                width = 0.3, position = position_dodge(width = 0.3)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_text(aes(label = ifelse(p.value < 0.001, "***",
+                               ifelse(p.value < 0.01, "**",
+                                      ifelse(p.value < 0.05, "*", "n.s.")))),
+            position = position_dodge(width = 0.6),
+            vjust = -1.2, show.legend = FALSE,
+            size = 6) +
+  labs(x = "Region",
+       y = "Δ days shifted flowering onset (warm - ambi)",
+       title = "Effect of warming on flowering onset - CHE vs NOR",
+       color = "Competition treatment")+
+  scale_color_manual(values = c("#CD950C", "#528B8B"))+
+  facet_wrap(~ species)
+
+
+
+# NOR and CHE together ----------------------------------------------------
+# filter only high site --------------------------------------------------------
+phenology_hi <- phenology |> 
+  filter(site == "hi")
+
+# julian days -------------------------------------------------------------
+phenology_hi$jday <- as.numeric(phenology_hi$date_measurement)  # converts to days
+phenology_hi$jday_scaled <- scale(phenology_hi$jday)
+
+# calculate flowering onset ------------------------------------------------
+flowering_onset_n_c <- phenology_hi |> 
+  filter(phenology_stage == "No_FloOpen", value > 0) |>
+  group_by(region, species, unique_plant_ID, block_ID, treat_warming, treat_competition) |>
+  summarise(onset = min(jday, na.rm = TRUE), .groups = "drop") |>
+  # remove groups where flowering never occurred
+  filter(is.finite(onset))
+
+
+# model flowering onset lmer ------------------------------------------
+m_onset_n_c <- lmerTest::lmer(onset ~ region * treat_warming * treat_competition + (1|species) + (1|block_ID),
+                          data = flowering_onset_n_c)
+summary(m_onset_n_c)
+
+
+# get emmeans for warming within each region × competition
+emm_n_c_col <- emmeans(m_onset_n_c, ~ treat_warming | region * treat_competition)
+
+# compute warming effect (warm - ambi) in each region × competition
+contr_warm <- contrast(emm_n_c_col, method = "revpairwise", by = c("region", "treat_competition"))
+
+# now compare warming effects across regions
+region_diff <- contrast(contr_warm, by = "treat_competition", method = "revpairwise")
+
+summary(region_diff, infer = TRUE)
+
+# get warming effects per region × competition
+contr_warm <- contrast(emm_n_c_col, method = "revpairwise", 
+                       by = c("region", "treat_competition"))
+
+contrast_df_nor_che <- as.data.frame(summary(contr_warm, infer = TRUE))
+
+# plot warming effects side by side for each region
+nor_che_effect <- ggplot(contrast_df_nor_che, 
+                         aes(x = region, y = estimate, color = treat_competition)) +
+  geom_point(size = 11, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), linewidth = 1,
+                width = 0.3, position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_text(aes(label = ifelse(p.value < 0.001, "***",
+                               ifelse(p.value < 0.01, "**",
+                                      ifelse(p.value < 0.05, "*", "n.s.")))),
+            vjust = -2, position = position_dodge(width = 0.7), show.legend = FALSE, size = 6) +
+  labs(x = "Region",
+       y = "Δ days shifted flowering onset (warm - ambi)",
+       title = "Effect of warming on flowering onset across regions",
+       color = "Competition treatment") +
+  scale_color_manual(values = c("#CD950C", "#528B8B"))
+nor_che_effect
+
+ggsave(filename = "Output/Flowering_onset_joined_model_CHE_NOR_warming_effect_delta_days.png", plot = nor_che_effect, width = 12, height = 8, units = "in")
+
+
+
+
+
+
+
+# with raw data points ----------------------------------------------------
+# compute mean onset per treatment × group
+onset_means <- flowering_onset_n_c |>
+  group_by(region, species, block_ID, treat_competition, treat_warming) |>
+  summarise(mean_onset = mean(onset, na.rm = TRUE), .groups = "drop")
+
+# pivot to get ambi vs warm in same row
+delta_onset <- onset_means |>
+  pivot_wider(names_from = treat_warming, values_from = mean_onset) |>
+  mutate(delta = warm - ambi) |>
+  filter(!is.na(delta))
+
+# check result
+head(delta_onset)
+
+
+# plot raw deltas + model estimates
+nor_che_delta_raw <- ggplot() +
+  # raw deltas (jittered for visibility)
+  geom_jitter(data = delta_onset,
+              aes(x = region, y = delta, color = treat_competition),
+              width = 0.1, alpha = 0.4, size = 2) +
+  
+  # model-based warming effects
+  geom_point(data = contrast_df_nor_che, 
+             aes(x = region, y = estimate, color = treat_competition),
+             size = 6, position = position_dodge(width = 0.5)) +
+  geom_errorbar(data = contrast_df_nor_che,
+                aes(x = region, ymin = lower.CL, ymax = upper.CL, color = treat_competition),
+                linewidth = 1, width = 0.1,
+                position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  # significance labels
+  geom_text(data = contrast_df_nor_che,
+            aes(x = region, y = estimate, 
+                label = ifelse(p.value < 0.001, "***",
+                               ifelse(p.value < 0.01, "**",
+                                      ifelse(p.value < 0.05, "*", "n.s."))),
+                color = treat_competition),
+            vjust = -2, position = position_dodge(width = 0.7),
+            show.legend = FALSE, size = 6) +
+  
+  labs(x = "Region",
+       y = "Δ days shifted flowering onset (warm − ambi)",
+       title = "Effect of warming on flowering onset across regions",
+       color = "Competition treatment") +
+  scale_color_manual(values = c("#CD950C", "#528B8B"))
+nor_che_delta_raw
+
+
+ggsave(filename = "Output/Flowering_onset_joined_model_CHE_NOR_warming_effect_delta_and_raw.png", plot = nor_che_delta_raw, width = 12, height = 8, units = "in")
+
+# 69 days difference between the cenjac plants in warm - ambi
+# CHE.hi.warm.vege.wf.10.14.1
+# CHE.hi.ambi.vege.wf.10.25.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
