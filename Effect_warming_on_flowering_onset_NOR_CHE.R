@@ -39,9 +39,24 @@ phenology <- phenology |>
 phenology$treatment <- paste(phenology$site, phenology$treat_warming, phenology$treat_competition, sep = "_")
 
 
+# change region and treatment names  --------------------------------------
+phenology <- phenology |>
+  mutate(region = case_when(
+    region == "NOR" ~ "Norway",
+    region == "CHE" ~ "Switzerland",
+    TRUE ~ region
+  ))
+
+phenology <- phenology |>
+  mutate(treat_competition = case_when(
+    treat_competition == "bare" ~ "without competition",
+    treat_competition == "vege" ~ "with competition",
+    TRUE ~ treat_competition
+  ))
+
 # filter only NOR ---------------------------------------------------------
 phenology_NOR <- phenology |> 
-  filter(region == "NOR")
+  filter(region == "Norway")
 
 
 # filter only high site --------------------------------------------------------
@@ -646,7 +661,7 @@ nor_che_delta_raw <- ggplot() +
        y = "Δ days shifted flowering onset (warm − ambi)",
        title = "Effect of warming on flowering onset across regions",
        color = "Competition treatment") +
-  scale_color_manual(values = c("#CD950C", "#528B8B"))
+  scale_color_manual(values = c("#528B8B", "#CD950C"))
 nor_che_delta_raw
 
 
