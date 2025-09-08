@@ -2,15 +2,16 @@
 
 # Growing degree days (GDD) -----------------------------------------------
 
-# RangeX phenology effect of cooling NOR and CHE ------------
+# RangeX phenology effect of cooling NOR ------------
 
 ## Data used: RangeX_clean_Phenology_2022_CHE.csv
 ##            RangeX_clean_phenology_2023_NOR.csv
 ##            RangeX_clean_MetadataFocal_CHE.csv
 ##            RangeX_metadata_focal_NOR.csv
-## Date:      02.09.25
+##            RangeX_clean_climate_station_NOR_2021-2025.csv
+## Date:      08.09.25
 ## Author:    Nadine Arzt
-## Purpose:   Effect of cooling on flowering onset NOR and CHE - compare julian days with gdd
+## Purpose:   Effect of cooling on flowering onset NOR
 
 
 # load library ------------------------------------------------------------
@@ -195,7 +196,7 @@ contr_nor_gdd_ambi <- contrast(emm_nor_gdd_ambi, method = list("lo - hi" = c(1, 
 contrast_df_nor_gdd_ambi <- as.data.frame(summary(contr_nor_gdd_ambi, infer = TRUE))
 
 
-ggplot(contrast_df_nor_gdd_ambi, aes(x = treat_competition, y = estimate, color = treat_competition)) +
+gdd_cooling_onset <- ggplot(contrast_df_nor_gdd_ambi, aes(x = treat_competition, y = estimate, color = treat_competition)) +
   geom_point(size = 8) +
   geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.1) +
   geom_hline(yintercept = 0, linetype = "dashed") +
@@ -213,7 +214,10 @@ ggplot(contrast_df_nor_gdd_ambi, aes(x = treat_competition, y = estimate, color 
   theme(legend.position = "none",
         axis.text.x = element_text(size = 20),
         axis.text.y = element_text(size = 20))
-#
+gdd_cooling_onset
+
+ggsave(filename = "Output/GDD_cooling_flowering_onset_NOR.png", plot = gdd_cooling_onset, width = 10, height = 8, units = "in")
+
 
 
 
