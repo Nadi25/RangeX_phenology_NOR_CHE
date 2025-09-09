@@ -165,7 +165,7 @@ p <- ggplot() +
             aes(x = treat_competition, y = emmean, color = treat_warming,
                 group = treat_warming),
             position = position_dodge(width = 0.3)) +
-  labs(x = "Biotic interactions", y = "Estimated flower number", color = "Warming") +
+  labs(x = "Biotic interactions", y = "Predicted mean number of flowers", color = "Temperature") +
   scale_color_manual(values = c("darkblue", "pink3"))+
   theme(axis.text.x = element_text(size = 20),
         axis.text.y = element_text(size = 20))+
