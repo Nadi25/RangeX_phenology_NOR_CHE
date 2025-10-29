@@ -141,12 +141,14 @@ head(delta_duration)
 nor_che_delta_raw_duration <- ggplot() +
   # raw deltas (jittered for visibility)
   geom_jitter(data = delta_duration,
-              aes(x = region, y = delta, color = treat_competition),
+              aes(x = region, y = delta, color = treat_competition,
+                  shape = region),
               width = 0.1, alpha = 0.4, size = 2) +
   
   # model-based warming effects
   geom_point(data = contrast_duration_nor_che, 
-             aes(x = region, y = estimate, color = treat_competition),
+             aes(x = region, y = estimate, color = treat_competition,
+                 shape = region),
              size = 6, position = position_dodge(width = 0.5)) +
   geom_errorbar(data = contrast_duration_nor_che,
                 aes(x = region, ymin = lower.CL, ymax = upper.CL, color = treat_competition),
@@ -168,7 +170,10 @@ nor_che_delta_raw_duration <- ggplot() +
        y = "Δ days shifted flowering duration (warmed − ambient)",
        title = "Effect of warming on flowering duration across regions",
        color = "Competition treatment") +
-  scale_color_manual(values = c("#528B8B", "#CD950C"))
+  scale_color_manual(values = c("#528B8B", "#CD950C"))+
+  scale_shape_manual(values = c("Norway" = 16, "Switzerland" = 17))+
+  theme(axis.text.x = element_text(size = 20),
+        axis.text.y = element_text(size = 20))
 nor_che_delta_raw_duration
 
 
@@ -244,12 +249,14 @@ head(delta_end)
 nor_che_delta_raw_end <- ggplot() +
   # raw deltas (jittered for visibility)
   geom_jitter(data = delta_end,
-              aes(x = region, y = delta, color = treat_competition),
+              aes(x = region, y = delta, color = treat_competition, 
+                  shape = region),
               width = 0.1, alpha = 0.4, size = 2) +
   
   # model-based warming effects
   geom_point(data = contrast_end_nor_che, 
-             aes(x = region, y = estimate, color = treat_competition),
+             aes(x = region, y = estimate, color = treat_competition,
+                 shape = region),
              size = 6, position = position_dodge(width = 0.5)) +
   geom_errorbar(data = contrast_end_nor_che,
                 aes(x = region, ymin = lower.CL, ymax = upper.CL, color = treat_competition),
@@ -271,7 +278,10 @@ nor_che_delta_raw_end <- ggplot() +
        y = "Δ days shifted flowering end (warmed − ambient)",
        title = "Effect of warming on flowering end across regions",
        color = "Competition treatment") +
-  scale_color_manual(values = c("#528B8B", "#CD950C"))
+  scale_color_manual(values = c("#528B8B", "#CD950C"))+
+  scale_shape_manual(values = c("Norway" = 16, "Switzerland" = 17))+
+  theme(axis.text.x = element_text(size = 20),
+        axis.text.y = element_text(size = 20))
 nor_che_delta_raw_end
 
 
