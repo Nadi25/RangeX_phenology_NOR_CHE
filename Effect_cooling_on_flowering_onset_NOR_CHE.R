@@ -17,6 +17,7 @@ library(lme4)
 library(ggeffects)
 library(broom.mixed)
 library(emmeans)
+library(lubridate)
 
 
 # load clean phenology data -----------------------------------------------
@@ -36,6 +37,21 @@ phenology <- phenology |>
 
 # combined treatment column -----------------------------------------------
 phenology$treatment <- paste(phenology$site, phenology$treat_warming, phenology$treat_competition, sep = "_")
+
+# change region and treatment names  --------------------------------------
+phenology <- phenology |>
+  mutate(region = case_when(
+    region == "NOR" ~ "Norway",
+    region == "CHE" ~ "Switzerland",
+    TRUE ~ region
+  ))
+
+phenology <- phenology |>
+  mutate(treat_competition = case_when(
+    treat_competition == "bare" ~ "without competition",
+    treat_competition == "vege" ~ "with competition",
+    TRUE ~ treat_competition
+  ))
 
 
 # filter only NOR ---------------------------------------------------------
@@ -177,7 +193,8 @@ che_nor_plot <- ggplot(all_contrasts, aes(x = region, y = estimate, color = trea
        y = "Δ days shifted flowering onset (low - high)",
        title = "Effect of cooling on flowering onset - CHE vs NOR",
        color = "Competition treatment")+
-  scale_color_manual(values = c("#CD950C", "#528B8B"))
+  scale_color_manual(values = c("#CD950C", "#528B8B"))+
+  coord_cartesian(ylim = c(-2, 30))
 che_nor_plot
 
 
@@ -188,6 +205,63 @@ ggsave(filename = "Output/Flowering_onset_CHE_NOR_cooling_effect_delta_days.png"
 
 
 
+# NOR and CHE together ---------------------------------------------------
+
+# filter only hi ambi and lo -----------------------------------------------
+phenology_cool <- phenology |> 
+  filter(treat_warming == "ambi")
+
+
+# julian days -------------------------------------------------------------
+phenology_cool$jday <- as.numeric(phenology_cool$date_measurement)  # converts to days
+phenology_cool$jday_scaled <- scale(phenology_cool$jday)
+
+# calculate flowering onset ------------------------------------------------
+flowering_onset_n_c_cool <- phenology_cool |> 
+  filter(phenology_stage == "No_FloOpen", value > 0) |>
+  group_by(region, site, species, unique_plant_ID, block_ID, treat_competition) |>
+  summarise(onset = min(jday, na.rm = TRUE), .groups = "drop") |>
+  # remove groups where flowering never occurred
+  filter(is.finite(onset))
+
+# model with region for flowering onset lmer ----------------------------------
+m_onset_n_c_cooling <- lmerTest::lmer(onset ~ region * site * treat_competition + (1|species) + (1|block_ID), data = flowering_onset_n_c_cool)
+
+summary(m_onset_cooling)
+
+
+
+# get emmeans for warming within each region × competition
+emm_n_c_cool <- emmeans(m_onset_n_c_cooling, ~ site | region * treat_competition)
+# this calculates marginal means per site
+# for each region * competition combination, we have one mean for low and high that we can then compare
+
+
+# compute contrasts (high - low) within each competition level
+contr_n_c_cool<- contrast(emm_n_c_cool, method = list("hi - lo" = c(1, -1)))
+
+
+# using summary keeps the p-values
+contrast_df_n_c_cool <- as.data.frame(summary(contr_n_c_cool, infer = TRUE))
+
+
+# plot delta of shift in flowering onset due to warming with significances
+nor_che_effect_col <- ggplot(contrast_df_n_c_cool, 
+       aes(x = region, y = estimate, color = treat_competition)) +
+  geom_point(size = 11, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), linewidth = 1,
+                width = 0.3, position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_text(aes(label = ifelse(p.value < 0.001, "***",
+                               ifelse(p.value < 0.01, "**",
+                                      ifelse(p.value < 0.05, "*", "n.s.")))),
+            vjust = -1.3, position = position_dodge(width = 0.9), show.legend = FALSE, size = 6) +
+  labs(x = "Region",
+       y = "Δ days shifted flowering onset (hi - lo)",
+       title = "Effect of transplantation (cooling) on flowering onset across regions",
+       color = "Competition treatment") +
+  scale_color_manual(values = c("#528B8B", "#CD950C"))
+nor_che_effect_col
 
 
 
@@ -198,16 +272,58 @@ ggsave(filename = "Output/Flowering_onset_CHE_NOR_cooling_effect_delta_days.png"
 
 
 
+# with raw data points ----------------------------------------------------
+# compute mean onset per treatment × group
+onset_means_cool <- flowering_onset_n_c_cool |>
+  group_by(region, site, species, block_ID, treat_competition) |>
+  summarise(mean_onset = mean(onset, na.rm = TRUE), .groups = "drop")
+
+# pivot to get ambi vs warm in same row
+delta_onset_cool <- onset_means_cool |>
+  pivot_wider(names_from = site, values_from = mean_onset) |>
+  mutate(delta = hi - lo) |>
+  filter(!is.na(delta))
+
+# check result
+head(delta_onset_cool)
 
 
+# plot raw deltas + model estimates
+nor_che_delta_raw_cool <- ggplot() +
+  # raw deltas (jittered for visibility)
+  geom_jitter(data = delta_onset_cool,
+              aes(x = region, y = delta, color = treat_competition),
+              width = 0.1, alpha = 0.4, size = 2) +
+  
+  # model-based warming effects
+  geom_point(data = contrast_df_n_c_cool, 
+             aes(x = region, y = estimate, color = treat_competition),
+             size = 6, position = position_dodge(width = 0.5)) +
+  geom_errorbar(data = contrast_df_n_c_cool,
+                aes(x = region, ymin = lower.CL, ymax = upper.CL, color = treat_competition),
+                linewidth = 1, width = 0.1,
+                position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  # significance labels
+  geom_text(data = contrast_df_n_c_cool,
+            aes(x = region, y = estimate, 
+                label = ifelse(p.value < 0.001, "***",
+                               ifelse(p.value < 0.01, "**",
+                                      ifelse(p.value < 0.05, "*", "n.s."))),
+                color = treat_competition),
+            vjust = -2, position = position_dodge(width = 0.7),
+            show.legend = FALSE, size = 12) +
+  
+  labs(x = "Region",
+       y = "Δ days shifted flowering onset (high - low)",
+       title = "Effect of cooling through transplantation on flowering onset across regions",
+       color = "Competition treatment") +
+  scale_color_manual(values = c("#528B8B", "#CD950C"))
+nor_che_delta_raw_cool
 
 
-
-
-
-
-
-
+ggsave(filename = "Output/Flowering_onset_joined_model_CHE_NOR_cooling_effect_delta_and_raw.png", plot = nor_che_delta_raw_cool, width = 12, height = 8, units = "in")
 
 
 
