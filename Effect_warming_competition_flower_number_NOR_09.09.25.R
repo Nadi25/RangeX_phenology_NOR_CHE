@@ -129,14 +129,22 @@ offset  <- 0.15
 
 ann_warm <- contr_warm |> 
   mutate(x_center = ifelse(treat_competition == "with", 1, 2),
-         xmin = x_center - offset, xmax = x_center + offset,
+         xmin = x_center + offset, 
+         xmax = x_center - offset,
          y = y_max + (row_number()) * spacing,
          label = sig)
 
 ann_comp <- contr_comp |> 
-  mutate(xmin = 1, xmax = 2,
+  mutate(x_shift = ifelse(treat_warming == "ambient", -0.1, +0.1),
+         xmin = 1 + x_shift, 
+         xmax = 2 + x_shift,
          y = y_max + (nrow(ann_warm) + row_number()) * spacing,
          label = sig)
+
+# ann_comp <- contr_comp |> 
+#   mutate(xmin = 1, xmax = 2,
+#          y = y_max + (nrow(ann_warm) + row_number()) * spacing,
+#          label = sig)
 
 # helper for brackets ------------------------------------------------
 bracket_geoms <- function(df) {
