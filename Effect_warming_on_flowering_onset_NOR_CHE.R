@@ -1,5 +1,7 @@
 
 
+# OLD script looking at NOR and CHE separately ----------------------------
+
 # Effect of warming on flowering onset ---------------------------------------
 
 # RangeX phenology effect of warming NOR and CHE ------------
@@ -655,10 +657,10 @@ nor_che_delta_raw <- ggplot() +
                                       ifelse(p.value < 0.05, "*", "n.s."))),
                 color = treat_competition),
             vjust = -2, position = position_dodge(width = 0.7),
-            show.legend = FALSE, size = 6) +
+            show.legend = FALSE, size = 12) +
   
   labs(x = "Region",
-       y = "Δ days shifted flowering onset (warm − ambi)",
+       y = "Δ days shifted flowering onset (warmed − ambient)",
        title = "Effect of warming on flowering onset across regions",
        color = "Competition treatment") +
   scale_color_manual(values = c("#528B8B", "#CD950C"))
