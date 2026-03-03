@@ -1,7 +1,7 @@
 
 
 library(ggeffects)
-
+theme_set(theme_bw(base_size = 22))
 
 source("Biomass_traits_correlation_NOR.R")
 
@@ -130,7 +130,7 @@ ggplot() +
 # the lines represent different height classes because the model that fits best 
 # is with height as interaction
 # the dots are the raw data
-ggplot() +
+p <- ggplot() +
   geom_point(data = analysis_data,
              aes(x = no..stems,
                  y = log_biomass),
@@ -147,12 +147,18 @@ ggplot() +
                   ymax = conf.high,
                   fill = group),
               alpha = 0.15) +
-  theme_minimal() +
   labs(x = "Number of stems",
        y = "log(biomass total)",
        color = "Height",
        fill = "Height")
+p
 
+ggsave(filename = "Output/Biomass_no_stems_correlation.png", 
+       plot = p, width = 13, height = 9, units = "in")
+
+
+# since the slopes are different with height:
+# The effect of stems on biomass depends on plant height.
 
 
 
