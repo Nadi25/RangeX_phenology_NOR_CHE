@@ -251,6 +251,10 @@ biomass_traits <- biomass_traits_NOR |>
 hist(biomass_traits$dry_weight_total_g)
 hist(log(biomass_traits$dry_weight_total_g))
 
+
+qqnorm(biomass_traits$dry_weight_total_g); qqline(biomass_traits$dry_weight_total_g)
+qqnorm(log(biomass_traits$dry_weight_total_g)); qqline(log(biomass_traits$dry_weight_total_g))
+
 # log biomass
 biomass_traits <- biomass_traits |>
   mutate(log_biomass = log(dry_weight_total_g))
