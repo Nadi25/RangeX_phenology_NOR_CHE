@@ -338,6 +338,7 @@ AIC(m_stems, m_stems_height, m_stems_height2)
 
 
 # m_stems_height2 seems to be the best fit
+# meaning the interaction between no stems and rep height str
 
 
 
