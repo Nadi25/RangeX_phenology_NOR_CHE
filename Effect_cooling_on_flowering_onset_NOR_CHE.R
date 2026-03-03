@@ -56,7 +56,7 @@ phenology <- phenology |>
 
 # filter only NOR ---------------------------------------------------------
 phenology_NOR <- phenology |> 
-  filter(region == "NOR")
+  filter(region == "Norway")
 
 
 # filter only hi ambi and lo -----------------------------------------------
@@ -114,7 +114,7 @@ nor_effect_col
 
 # filter only CHE ---------------------------------------------------------
 phenology_CHE <- phenology |> 
-  filter(region == "CHE")
+  filter(region == "Switzerland")
 
 
 # filter only hi ambi and lo -----------------------------------------------
