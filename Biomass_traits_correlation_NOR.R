@@ -247,21 +247,14 @@ ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = no..leaves.tillers, c
 biomass_traits <- biomass_traits_NOR |>
   filter(dry_weight_total_g > 0)
 
+# test distribution of biomass total
+hist(biomass_traits$dry_weight_total_g)
+hist(log(biomass_traits$dry_weight_total_g))
+
 # log biomass
 biomass_traits <- biomass_traits |>
   mutate(log_biomass = log(dry_weight_total_g))
 
-# # standardize traits
-# biomass_traits <- biomass_traits |>
-#   mutate(across(
-#     c(height.veg..cm.,
-#       height.rep..cm.,
-#       height.veg.stretch..cm.,
-#       height.rep.stretch..cm.,
-#       no..leaves.tillers,
-#       no..stems),
-#     scale
-#   ))
 # 
 
 
@@ -339,7 +332,6 @@ AIC(m_stems, m_stems_height, m_stems_height2)
 
 # m_stems_height2 seems to be the best fit
 # meaning the interaction between no stems and rep height str
-
 
 
 
