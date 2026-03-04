@@ -203,24 +203,75 @@ ggplot(traits_NOR,
 
 
 
+# rename columns ----------------------------------------------------------
+traits_NOR <- traits_NOR |>
+  rename(
+    # Heights
+    height_vegetative       = height.veg..cm.,
+    height_vegetative_str   = height.veg.stretch..cm.,
+    height_reproductive     = height.rep..cm.,
+    height_reproductive_str = height.rep.stretch..cm.,
+    height_Nathan_stretch_cm = height.Nathan.stretch..cm.,
+    
+    # Leaves / tillers
+    number_leaves_tillers = no..leaves.tillers,
+    
+    # Stems
+    no_stems = no..stems,
+    
+    # Herbivory
+    herbivory_leaf = herbivory.leaf,
+    herbivory_flower  = herbivory.flower,
+    herbivory  = herbivory.if.different...harvest,
+    
+    sampled_quarter = sampled.quarter,
+    sampled_half = sampled.half)
+
+
+
+# sampled quarter/half ---------------------------------------------------------
+# where sampled quarter, multiply by 4
+# half by 2
+traits_NOR$number_leaves <- ifelse(
+  traits_NOR$sampled_quarter == "yes",
+  traits_NOR$number_leaves_tillers * 4,
+  ifelse(
+    traits_NOR$sampled_half == "yes",
+    traits_NOR$number_leaves_tillers * 2,
+    traits_NOR$number_leaves_tillers))
+
+# so number_leaves is the actual one
+
+
+
+
+
+
+
+
+
+
+
 # combine biomass with traits ---------------------------------------------
 key <- "unique_plant_ID"
 
 traits_vars <- traits_NOR |>
   select(
     unique_plant_ID,
-    height.veg..cm.,
-    height.veg.stretch..cm.,
-    height.rep..cm.,
-    height.rep.stretch..cm.,
-    height.Nathan.stretch..cm.,
-    no..leaves.tillers,
+    height_vegetative,
+    height_vegetative_str,
+    height_reproductive,
+    height_reproductive_str,
+    height_Nathan_stretch_cm,
+    number_leaves_tillers,
+    number_leaves,
     no..leaves.tillers.if.different...harvest,
-    no..stems,
+    no_stems,
     no..stems.if.different...harvest,
-    herbivory.leaf,
-    herbivory.flower
+    herbivory_leaf,
+    herbivory_flower
   )
+
 
 biomass_traits_NOR <- biomass_NOR |>
   left_join(traits_vars, by = key)
@@ -229,16 +280,17 @@ biomass_traits_NOR <- biomass_NOR |>
 
 # plot --------------------------------------------------------------------
 
-ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = height.veg.stretch..cm.))+
+ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = height_vegetative_str))+
   geom_point()
 
-ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = height.rep.stretch..cm.))+
+ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = height_reproductive_str))+
   geom_point()
 
-ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = no..leaves.tillers, colour =  species))+
+ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = number_leaves, colour =  species))+
   geom_point()
 
-
+ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = number_leaves_tillers, colour =  species))+
+  geom_point()
 
 
 # biomass - trait - regression --------------------------------------------
@@ -259,20 +311,19 @@ qqnorm(log(biomass_traits$dry_weight_total_g)); qqline(log(biomass_traits$dry_we
 biomass_traits <- biomass_traits |>
   mutate(log_biomass = log(dry_weight_total_g))
 
-# 
 
 
 # models ------------------------------------------------------------------
 
-m_height <- lmerTest::lmer(log_biomass ~ height.veg..cm. + height.rep..cm. +
+m_height <- lmerTest::lmer(log_biomass ~ height_vegetative + height_reproductive +
     (1|species) + (1|block_ID),
   data = biomass_traits
 )
 
 summary(m_height)
 
-cor(biomass_traits$height.veg..cm.,
-    biomass_traits$height.rep..cm.,
+cor(biomass_traits$height_vegetative,
+    biomass_traits$height_reproductive,
     use="complete.obs")
 
 
@@ -280,59 +331,57 @@ cor(biomass_traits$height.veg..cm.,
 
 
 
+# make dataset for models that include plants that have all traits --------
 # use only plants that have all the traits available 
 analysis_data <- biomass_traits |>
   select(
     log_biomass,
-    height.veg..cm.,
-    height.rep..cm.,
-    height.veg.stretch..cm.,
-    height.rep.stretch..cm.,
-    no..leaves.tillers,
-    no..stems,
+    height_vegetative,
+    height_vegetative_str,
+    height_reproductive,
+    height_reproductive_str,
+    no_stems,
+    number_leaves,
     species,
     block_ID
   ) |>
   na.omit()
 
 
-m_height_v <- lmerTest::lmer(log_biomass ~ height.veg..cm. + (1|species) + (1|block_ID), data=analysis_data)
+# models individual per trait ---------------------------------------------
+m_height_v <- lmerTest::lmer(log_biomass ~ height_vegetative + (1|species) + (1|block_ID), data=analysis_data)
 summary(m_height_v)
 
-m_height_vs<- lmerTest::lmer(log_biomass ~ height.veg.stretch..cm. + (1|species) + (1|block_ID), data= analysis_data)
+m_height_vs<- lmerTest::lmer(log_biomass ~ height_vegetative_str + (1|species) + (1|block_ID), data= analysis_data)
 summary(m_height_vs)
 
 
-m_leaves <- lmerTest::lmer(log_biomass ~ no..leaves.tillers + (1|species) + (1|block_ID), data=analysis_data)
+m_leaves <- lmerTest::lmer(log_biomass ~ number_leaves + (1|species) + (1|block_ID), data=analysis_data)
 summary(m_leaves)
 
-AIC(m_height_v, m_leaves)
-
-
-m_height_r<- lmerTest::lmer(log_biomass ~ height.rep..cm. + (1|species) + (1|block_ID), data= analysis_data)
+m_height_r<- lmerTest::lmer(log_biomass ~ height_reproductive + (1|species) + (1|block_ID), data= analysis_data)
 summary(m_height_r)
 
-m_height_rs<- lmerTest::lmer(log_biomass ~ height.rep.stretch..cm. + (1|species) + (1|block_ID), data= analysis_data)
+m_height_rs<- lmerTest::lmer(log_biomass ~ height_reproductive_str + (1|species) + (1|block_ID), data= analysis_data)
 summary(m_height_rs)
 
-m_stems <- lmerTest::lmer(log_biomass ~ no..stems + (1|species) + (1|block_ID), data= analysis_data)
+m_stems <- lmerTest::lmer(log_biomass ~ no_stems + (1|species) + (1|block_ID), data= analysis_data)
 summary(m_stems)
 
 AIC(m_height_v, m_height_vs, m_leaves,m_height_r, m_height_rs, m_stems)
-
+# no stems is the best model
 
 # Does height add to stems ------------------------------------------------
-m_stems_height <- lmerTest::lmer(log_biomass ~ no..stems + height.rep.stretch..cm. + (1|species) + (1|block_ID), data= analysis_data)
+m_stems_height <- lmerTest::lmer(log_biomass ~ no_stems + height_reproductive_str + (1|species) + (1|block_ID), data= analysis_data)
 summary(m_stems_height)
 
 AIC(m_stems, m_stems_height)
 
 
-m_stems_height2 <- lmerTest::lmer(log_biomass ~ no..stems * height.rep.stretch..cm. + (1|species) + (1|block_ID), data= analysis_data)
+m_stems_height2 <- lmerTest::lmer(log_biomass ~ no_stems * height_reproductive_str + (1|species) + (1|block_ID), data= analysis_data)
 summary(m_stems_height2)
 
 AIC(m_stems, m_stems_height, m_stems_height2)
-
 
 # m_stems_height2 seems to be the best fit
 # meaning the interaction between no stems and rep height str
