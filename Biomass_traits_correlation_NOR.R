@@ -1,14 +1,13 @@
 
+# BIOMASS 1 ---------------------------------------------------------------
 
 # RangeX biomass - traits ------------
 
 ## Data used: 
 ## Date:      03.03.26
 ## Author:    Nadine Arzt
-## Purpose:   Biomass and trait regressions
+## Purpose:   Biomass and trait regressions models
 
-
-# comment -----------------------------------------------------------------
 
 # load library ------------------------------------------------------------
 library(conflicted)
@@ -388,12 +387,23 @@ AIC(m_stems, m_stems_height, m_stems_height2)
 
 
 
+# log no stems ------------------------------------------------------------
+# remove 0 stems
+analysis_data <- analysis_data |>
+  filter(no_stems > 0)
+
+analysis_data <- analysis_data |> 
+  mutate(log_no_stems = log(no_stems))
 
 
+m_stems_height3 <- lmerTest::lmer(log_biomass ~ log_no_stems * height_reproductive_str 
+                                  + (1|species) + (1|block_ID), data= analysis_data)
+summary(m_stems_height3)
 
 
+AIC(m_stems, m_stems_height, m_stems_height2, m_stems_height3)
 
-
+# ok, seems like the log of no stems improves the model fit
 
 
 
