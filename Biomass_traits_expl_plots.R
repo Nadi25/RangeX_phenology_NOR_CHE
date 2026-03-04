@@ -1,4 +1,6 @@
 
+# BIOMASS 2 ---------------------------------------------------------------
+
 # RangeX biomass - traits plots ------------
 
 ## Data used: source("Biomass_traits_correlation_NOR.R")
@@ -62,20 +64,20 @@ ggplot() +
 
 
 # regression no stems log biomass -----------------------------------------
-ggplot(analysis_data, aes(x = no_stems, y = log_biomass)) +
+ggplot(analysis_data, aes(x = log_no_stems, y = log_biomass)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE) +
-  labs(x = "Number of stems",
+  labs(x = "log(number of stems)",
        y = "log(biomass)")
 
 
 ggplot(analysis_data,
-       aes(x = no_stems,
+       aes(x = log_no_stems,
            y = log_biomass,
            color = height_reproductive_str)) +
   geom_point(alpha = 0.7) +
   scale_color_viridis_c() +
-  labs(x = "Number of stems",
+  labs(x = "log(number of stems)",
        y = "log(biomass)",
        color = "Height (cm)")
 
@@ -84,7 +86,7 @@ analysis_data <- analysis_data |>
   mutate(height_class = cut(height_reproductive_str, 3))
 
 ggplot(analysis_data,
-       aes(x = no_stems, y = log_biomass)) +
+       aes(x = log_no_stems, y = log_biomass)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", se = FALSE) +
   facet_wrap(~ height_class)
@@ -95,8 +97,8 @@ ggplot(analysis_data,
 # predict data? -----------------------------------------------------------
 # make several classes of height with the quantiles
 # min, low, medium, high, max
-pred <- ggpredict(m_stems_height2,
-                  terms = c("no_stems",
+pred <- ggpredict(m_stems_height3,
+                  terms = c("log_no_stems",
                             "height_reproductive_str [quantile]"))
 
 plot(pred)
@@ -104,7 +106,7 @@ plot(pred)
 
 ggplot() +
   geom_point(data = analysis_data,
-             aes(x = no_stems,
+             aes(x = log_no_stems,
                  y = log_biomass,
                  color = height_reproductive_str),
              alpha = 0.5) +
@@ -120,7 +122,7 @@ ggplot() +
                   group = group),
               alpha = 0.15) +
   scale_color_viridis_c() +
-  labs(x = "Number of stems",
+  labs(x = "log(number of stems)",
        y = "log(biomass)",
        color = "Height rep str (cm)")
 
@@ -132,7 +134,7 @@ ggplot() +
 # the dots are the raw data
 p <- ggplot() +
   geom_point(data = analysis_data,
-             aes(x = no_stems,
+             aes(x = log_no_stems,
                  y = log_biomass),
              alpha = 0.3,
              color = "grey50") +
@@ -147,13 +149,13 @@ p <- ggplot() +
                   ymax = conf.high,
                   fill = group),
               alpha = 0.15) +
-  labs(x = "Number of stems",
+  labs(x = "log(number of stems)",
        y = "log(biomass total)",
        color = "Height rep str",
        fill = "Height rep str")
 p
 
-ggsave(filename = "Output/Biomass_no_stems_correlation.png", 
+ggsave(filename = "Output/Biomass/Log(biomass)_log(no_stems)_correlation.png", 
        plot = p, width = 13, height = 9, units = "in")
 
 
