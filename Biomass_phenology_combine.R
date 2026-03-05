@@ -167,10 +167,10 @@ b <- ggplot() +
               aes(x = x, ymin = conf.low, ymax = conf.high),
               alpha = 0.2, fill = "turquoise4") +
   labs(x = "Log(max number of flowers)",
-       y = "Predicted log(biomass)",
-       title = "Mixed-model prediction with 95% CI")
+       y = "Predicted log(biomass)")
 b
 # the points are the actual log data, the line is the model
+# title = "Mixed-model prediction with 95% CI"
 
 ggsave(filename = "Output/Biomass/Log_pred_biomass_log_max_flowers_lmm.png", 
        plot = b, width = 13, height = 9, units = "in")
