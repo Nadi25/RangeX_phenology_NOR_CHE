@@ -61,10 +61,16 @@ ggplot() +
 
 
 
+# boxplot biomass low high ------------------------------------------------
+ggplot(analysis_data, aes(x = treat_warming, y = log_biomass))+
+  geom_boxplot()
+
+ggplot(analysis_data, aes(x = site, y = log_biomass))+
+  geom_boxplot()
 
 
 # regression no stems log biomass -----------------------------------------
-ggplot(analysis_data, aes(x = log_no_stems, y = log_biomass)) +
+ggplot(analysis_data, aes(x = log_no_stems, y = log_biomass, colour = treat_warming)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE) +
   labs(x = "log(number of stems)",
