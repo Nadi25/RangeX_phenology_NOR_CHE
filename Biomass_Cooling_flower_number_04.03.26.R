@@ -37,7 +37,7 @@ summary(m_flower_number_cool_bio)
 
 # Does cooling affect flowers after controlling for plant size? Yes#
 # when biomass is included, plants produce sig more flowers at the high site
-
+# no, this cant be said like this because of the interaction effect that is sig
 
 # compared to the old model without biomass
 summary(m_flower_number_cool)
