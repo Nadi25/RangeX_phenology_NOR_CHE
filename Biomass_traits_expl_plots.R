@@ -170,10 +170,63 @@ ggsave(filename = "Output/Biomass/Log(biomass)_log(no_stems)_correlation.png",
 
 
 
+# color code by species ---------------------------------------------------
 
 
+p2 <- ggplot() +
+  geom_point(data = analysis_data,
+             aes(x = log_no_stems,
+                 y = log_biomass,
+                 color = species),
+             alpha = 0.3) +
+  
+  geom_line(data = pred,
+            aes(x = x,
+                y = predicted,
+                group = group),
+            color = "black",
+            linewidth = 1.2) +
+  
+  geom_ribbon(data = pred,
+              aes(x = x,
+                  ymin = conf.low,
+                  ymax = conf.high,
+                  group = group),
+              fill = "grey60",
+              alpha = 0.2) +
+  
+  labs(x = "log(number of stems)",
+       y = "log(total biomass)",
+       color = "Species")
 
+p2
 
+ggplot() +
+  geom_point(data = analysis_data,
+             aes(x = log_no_stems,
+                 y = log_biomass,
+                 color = species),
+             alpha = 0.3) +
+  
+  # geom_line(data = pred,
+  #           aes(x = x,
+  #               y = predicted,
+  #               group = group),
+  #           color = "black",
+  #           linewidth = 1.2) +
+  
+  # geom_ribbon(data = pred,
+  #             aes(x = x,
+  #                 ymin = conf.low,
+  #                 ymax = conf.high,
+  #                 group = group),
+  #             fill = "grey60",
+  #             alpha = 0.2) +
+  
+  labs(x = "log(number of stems)",
+       y = "log(total biomass)",
+       color = "Species")+
+  facet_grid(~species)
 
 
 
