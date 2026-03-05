@@ -1,12 +1,13 @@
 
 # BIOMASS 1 ---------------------------------------------------------------
 
-# RangeX biomass - traits ------------
+# RangeX biomass - traits 2024 ------------
 
 ## Data used: 
 ## Date:      03.03.26
 ## Author:    Nadine Arzt
 ## Purpose:   Biomass and trait regressions models
+##            Find the best predictor trait for biomass
 
 
 # load library ------------------------------------------------------------
@@ -333,7 +334,7 @@ cor(biomass_traits$height_vegetative,
 # make dataset for models that include plants that have all traits --------
 # use only plants that have all the traits available 
 analysis_data <- biomass_traits |>
-  select(
+  select(treat_warming, treat_competition, site,
     log_biomass,
     height_vegetative,
     height_vegetative_str,
@@ -405,6 +406,65 @@ AIC(m_stems, m_stems_height, m_stems_height2, m_stems_height3)
 
 # ok, seems like the log of no stems improves the model fit
 
+
+
+
+
+# are plants at the low site bigger? --------------------------------------
+
+# compare only ambi, filter out warm
+analysis_data_ambi <- analysis_data |> 
+  filter(treat_warming == "ambi")
+
+m_cooling <- lmerTest::lmer(log_biomass ~ site * treat_competition + 
+                              (1|species) + (1|block_ID), data= analysis_data_ambi)
+
+summary(m_cooling)
+
+# there is no difference in biomass between sites? 
+
+
+
+# does competition affect biomass? ----------------------------------------
+# yes, also in the summery(m_cooling)
+
+
+
+# should height be log transformed ----------------------------------------
+# test distribution
+hist(analysis_data$height_reproductive_str)
+hist(log(analysis_data$height_reproductive_str))
+
+
+qqnorm(analysis_data$height_reproductive_str); qqline(analysis_data$height_reproductive_str)
+qqnorm(log(analysis_data$height_reproductive_str)); qqline(log(analysis_data$height_reproductive_str))
+
+
+analysis_data <- analysis_data |>
+  mutate(log_height_reproductive_str = log(height_reproductive_str))
+
+
+m_stems_height4 <- lmerTest::lmer(log_biomass ~ log_no_stems * log_height_reproductive_str 
+                                  + (1|species) + (1|block_ID), data= analysis_data)
+summary(m_stems_height4)
+
+
+AIC(m_stems, m_stems_height, m_stems_height2, m_stems_height3, m_stems_height4)
+
+# log trans height rep improves the model slightly but the data seems better noraml distributed without it
+# so I stick to not doing it.
+
+
+
+
+# allow for species specifc slopes inthe model ----------------------------
+
+
+m_stems_height5 <- lmerTest::lmer(log_biomass ~ log_no_stems * height_reproductive_str +
+       (log_no_stems + height_reproductive_str | species) +
+       (1|block_ID),
+     data = analysis_data)
+summary(m_stems_height5)
 
 
 
