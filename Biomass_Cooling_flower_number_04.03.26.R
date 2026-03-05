@@ -1,5 +1,5 @@
 
-# BIOMASS 5 ---------------------------------------------------------------
+# BIOMASS 8 ---------------------------------------------------------------
 
 # Adding predicted biomass to phenology and fit model with pred biomass ------------
 
@@ -156,7 +156,7 @@ p_bio <- ggplot() +
   
   labs(
     x = "Site",
-    y = "Predicted mean number of flowers (adjusted for biomass)",
+    y = "Predicted mean number of flowers\n(adjusted for biomass)",
     color = "Biotic interactions",
     title = "Effect of site and competition on flower number including biomass"
   ) +
