@@ -47,6 +47,17 @@ ggsave(filename = "Output/Biomass/Comparison_of_predicted_bio_general_vs_species
        plot = c, width = 13, height = 9, units = "in")
 
 
+d <- ggplot(rangex_traits_23_pb_2, aes(x = pred_log_biomass, y = pred_log_biomass_species, color = species)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
+  labs(
+    x = "Predicted log biomass (one model)",
+    y = "Predicted log biomass (species-specific models)",
+    title = "Comparison of predicted log biomass methods"
+  )
+d
+ggsave(filename = "Output/Biomass/Comparison_of_predicted_bio_general_vs_species_colored.png", 
+       plot = d, width = 13, height = 9, units = "in")
 
 cor(rangex_traits_23_pb_2$pred_log_biomass,
     rangex_traits_23_pb_2$pred_log_biomass_species,
