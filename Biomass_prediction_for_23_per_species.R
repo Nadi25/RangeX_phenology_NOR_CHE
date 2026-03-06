@@ -8,7 +8,7 @@
 
 # source scripts ----------------------------------------------------------
 # source biomass correlation preparation script
-source("Biomass_traits_correlation_per_species.R.R")
+source("Biomass_traits_correlation_per_species.R")
 
 # source clean traits 23 script
 source("RangeX_data_paper_cleaning_demographic_traits_23.R")
