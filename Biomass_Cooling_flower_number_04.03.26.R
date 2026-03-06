@@ -170,6 +170,16 @@ p_bio
 ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass.png", 
        plot = p_bio, width = 10, height = 8, units = "in")
 
+# just log transform the y axis?
+p_bio +
+  scale_y_continuous(trans = "log1p")
+
+
+# 
+hist(phenology_NOR_ambi_flowers_bio$value)
+# very skewed
+
+# model glmer.nb  -------------------------------------
 
 
 
