@@ -9,7 +9,7 @@ source("Biomass_traits_correlation_NOR.R")
 # log transform the traits ------------------------------------------------
 analysis_data_24_log <- biomass_traits |>
   select(
-    treat_warming, treat_competition, site,
+    treat_warming, treat_competition, site, functional_group,
     log_biomass,
     height_vegetative,
     height_vegetative_str,

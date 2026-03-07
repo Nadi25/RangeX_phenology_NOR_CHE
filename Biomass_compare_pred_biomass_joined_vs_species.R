@@ -1,7 +1,8 @@
 
 
-# BIOMASS 9 ---------------------------------------------------------------
+# BIOMASS 6 ---------------------------------------------------------------
 
+# maybe not even so useful?
 
 # compare the predicted biomass for 23  -----------------------------------
 # with species specific models and with one joined model
@@ -47,7 +48,8 @@ ggsave(filename = "Output/Biomass/Comparison_of_predicted_bio_general_vs_species
        plot = c, width = 13, height = 9, units = "in")
 
 
-d <- ggplot(rangex_traits_23_pb_2, aes(x = pred_log_biomass, y = pred_log_biomass_species, color = species)) +
+d <- ggplot(rangex_traits_23_pb_2, aes(x = pred_log_biomass, y = pred_log_biomass_species, 
+                                       color = species)) +
   geom_point(alpha = 0.5) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
   labs(

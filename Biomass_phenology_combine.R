@@ -1,5 +1,5 @@
 
-# BIOMASS 7 ---------------------------------------------------------------
+# BIOMASS 9 ---------------------------------------------------------------
 
 # Adding predicted biomass to phenology ------------
 
@@ -167,7 +167,8 @@ b <- ggplot() +
               aes(x = x, ymin = conf.low, ymax = conf.high),
               alpha = 0.2, fill = "turquoise4") +
   labs(x = "Log(max number of flowers)",
-       y = "Predicted log(biomass)")
+       y = "Predicted log(biomass)",
+       title = "General model")
 b
 # the points are the actual log data, the line is the model
 # title = "Mixed-model prediction with 95% CI"

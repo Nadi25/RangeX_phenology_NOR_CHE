@@ -1,6 +1,6 @@
 
 
-# BIOMASS 5 ---------------------------------------------------------------
+# BIOMASS 8 ---------------------------------------------------------------
 
 
 #  predict 2023 bimass with species specific models per species -----------
@@ -154,7 +154,7 @@ bio_pred_23_species <- bind_rows(
   df_2023_sildio
 )
 
-
+bio_pred_23_species
 
 
 

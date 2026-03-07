@@ -1,5 +1,7 @@
 
-# BIOMASS 8 ---------------------------------------------------------------
+# BIOMASS 11 ---------------------------------------------------------------
+
+# Effect of cooling on flower number lmer -------------------------------------
 
 # Adding predicted biomass to phenology and fit model with pred biomass ------------
 
@@ -81,10 +83,6 @@ contr_comp_bio <- contrast(
            p.value < 0.05  ~ "*",
            TRUE ~ "ns"
          ))
-
-
-
-
 
 
 

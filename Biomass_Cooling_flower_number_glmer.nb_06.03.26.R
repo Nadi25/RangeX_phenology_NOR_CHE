@@ -1,4 +1,20 @@
 
+# BIOMASS 12 ---------------------------------------------------------------
+
+# Effect of cooling on flower number glmer.nb -------------------------------------
+# negative binomial model is better for our data
+
+# uses one general bioamss prediction model
+
+# Adding predicted biomass to phenology and fit general model with pred biomass ------------
+
+## Data used: 
+## Date:      03.03.26
+## Author:    Nadine Arzt
+## Purpose:   Does biomass mitigate the effect of cooling on no of flowers?
+
+
+
 library(performance)
 
 # Use glmer.nb model ------------------------------------------------------

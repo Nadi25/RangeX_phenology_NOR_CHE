@@ -10,6 +10,9 @@
 ##            Find the best predictor trait for biomass
 
 
+# comment -----------------------------------------------------------------
+# m_stems_height3 is the best model
+
 # load library ------------------------------------------------------------
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
@@ -397,6 +400,8 @@ analysis_data <- analysis_data |>
   mutate(log_no_stems = log(no_stems))
 
 
+
+# best model! -------------------------------------------------------------
 m_stems_height3 <- lmerTest::lmer(log_biomass ~ log_no_stems * height_reproductive_str 
                                   + (1|species) + (1|block_ID), data= analysis_data)
 summary(m_stems_height3)

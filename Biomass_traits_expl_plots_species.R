@@ -7,7 +7,7 @@
 ## Data used: 
 ## Date:      03.03.26
 ## Author:    Nadine Arzt
-## Purpose:   Biomass and trait regressions plots
+## Purpose:   Biomass and trait regressions plots species model based
 
 
 
