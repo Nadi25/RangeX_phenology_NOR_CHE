@@ -25,7 +25,6 @@ source("Biomass_Cooling_flower_number_04.03.26.R")
 
 
 
-
 # add predicted species biomass to pheno data -------------------------------------
 bio_flower_species_unique <- bio_flower_species |>
   group_by(unique_plant_ID) |>
@@ -38,6 +37,14 @@ phenology_NOR_ambi_flowers_bio_species <- phenology_NOR_ambi_flowers |>
             by = "unique_plant_ID")
 
 
+# change reference to be low site ----------------------------------------------
+# by factor
+phenology_NOR_ambi_flowers_bio_species <- phenology_NOR_ambi_flowers_bio_species |>
+  mutate(
+    site = factor(site),
+    site = relevel(site, ref = "low")
+  )
+# now low site is the reference and will come first in the plot
 
 # fit the glmer.nb with species bimass ------------------------------------
 m_flower_number_cool_bio_nb_species <- glmer.nb(
@@ -179,7 +186,7 @@ p_bio_nb_species <- ggplot() +
   scale_color_manual(values = c("#528B8B", "#CD950C"))
 p_bio_nb_species
 
-ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_species_models_glmer.nb.png", 
+ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_species_models_glmer.nb_2.png", 
        plot = p_bio_nb_species, width = 10, height = 8, units = "in")
 
 
