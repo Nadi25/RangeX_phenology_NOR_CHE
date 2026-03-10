@@ -4,7 +4,7 @@
 # Effect of cooling on flower number glmer.nb -------------------------------------
 # negative binomial model is better for our data
 
-# uses one general bioamss prediction model
+# uses one general biomass prediction model
 
 # Adding predicted biomass to phenology and fit general model with pred biomass ------------
 
@@ -167,13 +167,14 @@ p_bio_nb <- ggplot() +
     x = "Site",
     y = "Predicted mean number of flowers\n(adjusted for biomass)",
     color = "Biotic interactions",
-    title = "Effect of site and competition on flower number including biomass"
+    title = "Effect of site and competition on flower number\nincluding biomass (glmer.nb)\ngeneral model"
   ) +
   
   scale_color_manual(values = c("#528B8B", "#CD950C"))
 p_bio_nb
 
-
+ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_general_model_glmer.nb.png", 
+       plot = p_bio_nb, width = 10, height = 8, units = "in")
 
 
 
