@@ -77,7 +77,7 @@ df_2023_leuvul <- demo_traits_2023_bio2 |> filter(species == "leuvul")
 df_2023_leuvul <- df_2023_leuvul |> 
   mutate(
     log_no_stems = log1p(no_stems),
-    log_log_number_leaves = log1p(log_number_leaves),
+    log_number_leaves = log1p(number_leaves),
   ) |> drop_na(log_no_stems, log_number_leaves )
 
 df_2023_leuvul$pred_log_biomass <- predict(m_leuvul, newdata = df_2023_leuvul, re.form = NA)
@@ -88,8 +88,9 @@ df_2023_tripra <- demo_traits_2023_bio2 |> filter(species == "tripra")
 
 df_2023_tripra <- df_2023_tripra |> 
   mutate(
-    log_height_reproductive_str = log1p(height_reproductive_str)
-  ) |> drop_na(log_height_reproductive_str)
+    log_height_reproductive_str = log1p(height_reproductive_str),
+    log_no_stems = log1p(no_stems),
+  ) |> drop_na(log_height_reproductive_str, log_height_reproductive_str)
 
 df_2023_tripra$pred_log_biomass <- predict(m_tripra, newdata = df_2023_tripra, re.form = NA)
 
@@ -123,8 +124,9 @@ df_2023_cyncri <- demo_traits_2023_bio2 |> filter(species == "cyncri")
 
 df_2023_cyncri <- df_2023_cyncri |> 
   mutate(
-    log_no_stems = log1p(no_stems)
-  ) |> drop_na(log_no_stems)
+    log_no_stems = log1p(no_stems),
+    log_number_leaves = log1p(number_leaves)
+  ) |> drop_na(log_no_stems, log_number_leaves)
 
 df_2023_cyncri$pred_log_biomass <- predict(m_cyncri, newdata = df_2023_cyncri, re.form = NA)
 
@@ -134,8 +136,9 @@ df_2023_sildio <- demo_traits_2023_bio2 |> filter(species == "sildio")
 
 df_2023_sildio <- df_2023_sildio |> 
   mutate(
-    log_number_leaves = log1p(number_leaves)
-  ) |> drop_na(log_number_leaves)
+    log_number_leaves = log1p(number_leaves),
+    log_height_reproductive_str = log1p(height_reproductive_str)
+  ) |> drop_na(log_number_leaves, log_height_reproductive_str)
 
 df_2023_sildio$pred_log_biomass <- predict(m_sildio, newdata = df_2023_sildio, re.form = NA)
 
@@ -156,6 +159,6 @@ bio_pred_23_species <- bind_rows(
 )
 
 bio_pred_23_species
-
+# 1151 obs
 
 
