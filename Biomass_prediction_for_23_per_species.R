@@ -3,7 +3,7 @@
 # BIOMASS 8 ---------------------------------------------------------------
 
 
-#  predict 2023 bimass with species specific models per species -----------
+#  predict 2023 biomass with species specific models per species -----------
 
 
 # source scripts ----------------------------------------------------------
@@ -76,8 +76,9 @@ df_2023_leuvul <- demo_traits_2023_bio2 |> filter(species == "leuvul")
 
 df_2023_leuvul <- df_2023_leuvul |> 
   mutate(
-    log_no_stems = log1p(no_stems)
-  ) |> drop_na(log_no_stems)
+    log_no_stems = log1p(no_stems),
+    log_log_number_leaves = log1p(log_number_leaves),
+  ) |> drop_na(log_no_stems, log_number_leaves )
 
 df_2023_leuvul$pred_log_biomass <- predict(m_leuvul, newdata = df_2023_leuvul, re.form = NA)
 
