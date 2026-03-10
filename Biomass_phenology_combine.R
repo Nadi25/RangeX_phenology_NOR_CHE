@@ -1,7 +1,7 @@
 
 # BIOMASS 9 ---------------------------------------------------------------
 
-# Adding predicted biomass to phenology ------------
+# Adding predicted biomass to phenology general model ------------
 
 ## Data used: 
 ## Date:      03.03.26
