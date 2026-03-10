@@ -28,6 +28,19 @@ colors <- c(
   "#80B1D3"
 )
 
+# colors more like the sticks were
+colors2 <- c(
+  "#000000",
+  "#8DD3C7",
+  "#E69F00",
+  "#56B4E9",
+  "#D55E00",
+  "#CC79A7",
+  "#009E73",
+  "#0072B2",
+  "#80B1D3",
+  "#FB8072"
+)
 
 # source script with both model methods -----------------------------------
 # general
@@ -53,7 +66,7 @@ analysis_data_24_log$pred_log_biomass_general <- predict(m_stems_height3,
 # sucpra ------------------------------------------------------------------
 df_2024_sucpra <- analysis_data_24_log |> 
   filter(species == "sucpra") |> 
-  drop_na(log_no_stems, log_number_leaves)
+  drop_na(log_no_stems, log_number_leaves) # this removes plants where not both traits are available
 
 df_2024_sucpra$pred_log_biomass <- predict(m_sucpra, newdata = df_2024_sucpra, re.form = NA)
 
@@ -85,7 +98,7 @@ df_2024_luzmul$pred_log_biomass <- predict(m_luzmul, newdata = df_2024_luzmul, r
 # leuvul ------------------------------------------------------------------
 df_2024_leuvul <- analysis_data_24_log |> 
   filter(species == "leuvul") |> 
-  drop_na(log_no_stems)
+  drop_na(log_no_stems, log_number_leaves )
 
 df_2024_leuvul$pred_log_biomass <- predict(m_leuvul, newdata = df_2024_leuvul, re.form = NA)
 
@@ -117,7 +130,7 @@ df_2024_plalan$pred_log_biomass <- predict(m_plalan, newdata = df_2024_plalan, r
 # cyncri ------------------------------------------------------------------
 df_2024_cyncri <- analysis_data_24_log |> 
   filter(species == "cyncri") |> 
-  drop_na(log_no_stems)
+  drop_na(log_no_stems, log_number_leaves )
 
 df_2024_cyncri$pred_log_biomass <- predict(m_cyncri, newdata = df_2024_cyncri, re.form = NA)
 
@@ -125,7 +138,7 @@ df_2024_cyncri$pred_log_biomass <- predict(m_cyncri, newdata = df_2024_cyncri, r
 # sildio ------------------------------------------------------------------
 df_2024_sildio <- analysis_data_24_log |> 
   filter(species == "sildio") |> 
-  drop_na(log_number_leaves)
+  drop_na(log_number_leaves, log_height_reproductive_str )
 
 df_2024_sildio$pred_log_biomass <- predict(m_sildio, newdata = df_2024_sildio, re.form = NA)
 
@@ -208,9 +221,25 @@ ggsave(filename = "Output/Biomass/Log(biomass24)_log(pred_biomass24_species).png
        plot = f, width = 12, height = 9, units = "in")
 
 
+g <- ggplot(df_2024_pred_species,
+            aes(log_biomass,
+                pred_log_biomass_species,
+                color = species,
+                shape = functional_group)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_abline(slope = 1, intercept = 0) +
+  scale_color_manual(values = colors) +
+  scale_shape_manual(values = c(16, 17, 15, 3, 8))+
+  labs(x = "log(biomass real 24)",
+       y = "log(pred biomass 24 species model)",
+       color = "Species",
+       shape = "Functional group")+
+  theme(legend.position = "none")+
+  facet_wrap(~ species)
+g
 
-
-
+ggsave(filename = "Output/Biomass/Log(biomass24)_log(pred_biomass24_species_seperated).png", 
+       plot = g, width = 12, height = 9, units = "in")
 
 # what is better ----------------------------------------------------------
 # rmse = root mean squared error
@@ -257,7 +286,7 @@ n <- df_2024_pred_species |>
     RMSE_general = sqrt(mean((log_biomass - pred_log_biomass_general)^2))
   )
 n
-# for 7/10 species the individual model is better then the general
+# for 8/10 species the individual model is better then the general
 
 n |>
   mutate(diff = RMSE_general - RMSE_species) |>
@@ -271,3 +300,185 @@ ggplot(df_2024_pred_species) +
 
 
 ## so we take the species specific model?
+
+
+
+
+
+# figure out why some species are divided in two groups -------------------
+
+ggplot(df_2024_pred_species,
+       aes(log_no_stems, log_number_leaves, color = species)) +
+  geom_point() +
+  facet_wrap(~ species)
+
+m_cyncri
+
+
+ggplot(df_2024_pred_species,
+       aes(log_biomass, pred_log_biomass_species, color = height_reproductive_str)) +
+  geom_point() +
+  facet_wrap(~ species)
+
+# biomass differences per site, actually interesting
+ggplot(df_2024_pred_species,
+       aes(log_biomass, pred_log_biomass_species, color = site)) +
+  geom_point() +
+  facet_wrap(~ species)
+
+ggplot(df_cyncri, aes(log_no_stems, log_biomass)) +
+  geom_point() +
+  labs(title = "cyncri biomass vs stems")
+
+ggplot(df_cyncri, aes(log_number_leaves, log_biomass)) +
+  geom_point() +
+  labs(title = "CYNCRI: biomass vs leaves")
+
+
+analysis_data_24_log |>
+  filter(species == "cyncri") |>
+  count(no_stems, number_leaves)
+
+
+# seems like cyncri has many individuals with 1 stem and some amount of leaves
+# this might be one group
+# then others have several stems - second group
+
+ggplot(df_2024_pred_species,
+       aes(log_biomass, log_no_stems, color = treat_competition)) +
+  geom_point() +
+  facet_wrap(~ species)
+
+ggplot(df_2024_cyncri,
+       aes(pred_log_biomass, log_biomass,
+           color = number_leaves)) +
+  geom_point()
+
+ggplot(df_2024_cyncri,
+       aes(pred_log_biomass, log_biomass,
+           color = factor(no_stems))) +
+  geom_point()
+
+df_cyncri |>
+  ggplot(aes(site, log_biomass)) +
+  geom_boxplot()
+
+ggplot(df_2024_cyncri,
+       aes(pred_log_biomass, log_biomass, color = site)) +
+  geom_point()
+
+# check if total is sum from individul
+biomass_NOR_ <- biomass_NOR |>
+  mutate(
+    dry_sum = dry_weight_stem_g +
+      dry_weight_leaves_g +
+      dry_weight_flowers_g
+  )
+
+summary(biomass_NOR$dry_weight_total_g)
+hist(biomass_NOR$dry_weight_total_g)
+
+biomass_NOR |>
+  filter(species == "cyncri") |>
+  ggplot(aes(dry_weight_total_g)) +
+  geom_histogram()
+
+
+## is it the 0 in dry_weight_total_g
+
+ggplot(df_2024_cyncri,
+       aes(pred_log_biomass, log_biomass,
+           color = dry_weight_stem_g > 0)) +
+  geom_point()
+
+biomass_traits_NOR |>
+  filter(species == "cyncri") |>
+  ggplot(aes(dry_weight_total_g)) +
+  geom_histogram(bins = 30)
+
+biomass_traits_NOR |>
+  filter(species == "cyncri") |>
+  ggplot(aes(dry_weight_total_g, color = dry_weight_stem_g > 0)) +
+  geom_density()
+
+
+ggplot(df_2024_cyncri,
+       aes(pred_log_biomass, log_biomass,
+           color = dry_weight_leaves_g > 0)) +
+  geom_point()
+
+ggplot(df_2024_cyncri,
+       aes(pred_log_biomass, log_biomass)) +
+  geom_point() +
+  geom_hline(yintercept = mean(df_2024_cyncri$log_biomass))
+
+
+ggplot(df_cyncri,
+       aes(no_stems, dry_weight_total_g)) +
+  geom_point()
+
+ggplot(df_cyncri,
+       aes(number_leaves, dry_weight_total_g)) +
+  geom_point()
+
+## cyncri 
+
+# Observation
+# 
+# Biomass vs. no_stems and biomass vs. number_leaves both show two distinct clusters.
+# 
+# Plants with similar stem or leaf numbers can have very different biomass.
+# 
+# Example from raw data:
+#   
+#   2 stems → ~1 g biomass
+# 2 stems → ~15–20 g biomass
+# 
+# Interpretation
+# 
+# Stem number and leaf number do not fully capture plant size in cyncri.
+# 
+# Two structural plant states likely exist:
+#   
+#   Small individuals
+# 
+# few leaves
+# 
+# thin tillers
+# 
+# biomass ≈ 0–3 g
+# 
+# Established clumps
+# 
+# similar stem/leaf counts
+# 
+# thicker shoots / more leaf mass
+# 
+# biomass ≈ 10–30 g
+# 
+# Thus:
+#   
+#   biomass ≠ function(stems, leaves) only
+# 
+# Consequence for the biomass model
+# 
+# The biomass model (log_biomass ~ log_no_stems * log_number_leaves) cannot distinguish these two plant types.
+# 
+# Therefore predictions group plants with similar stem/leaf numbers together, producing two clouds in predicted vs. observed plots.
+# 
+# Conclusion
+# 
+# The pattern is not a coding error.
+# 
+# It reflects biological variation not captured by the predictors (e.g., tiller thickness or leaf mass).
+# 
+# The model still captures the overall biomass gradient, but with substantial unexplained variance.
+# 
+
+
+
+
+
+
+
+
