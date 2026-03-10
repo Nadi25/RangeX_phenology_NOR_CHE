@@ -11,7 +11,7 @@
 
 
 
-source("Biomass_traits_correlation_per_species.R.R")
+source("Biomass_traits_correlation_per_species.R")
 
 library(ggeffects)
 theme_set(theme_bw(base_size = 12))
