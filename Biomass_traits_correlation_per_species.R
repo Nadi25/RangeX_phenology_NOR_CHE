@@ -1,6 +1,12 @@
 
 # BIOMASS 3 ---------------------------------------------------------------
 
+
+# library -----------------------------------------------------------------
+library(lmerTest)
+conflicts_prefer(lmerTest::lmer)
+
+
 # Fit individual models per species ---------------------------------------
 
 source("Biomass_traits_correlation_NOR.R")
@@ -376,12 +382,32 @@ AIC(
 # top_models_species[["leuvul"]][["additive"]]     5 501.2501
 # top_models_species[["leuvul"]][["interaction"]]  6 506.1067
 
-# final model for leuvul --------------------------------------------------
-m_leuvul <- lmerTest::lmer(
+# fit model for leuvul --------------------------------------------------
+m_leuvul3 <- lmerTest::lmer(
   log_biomass ~ log_no_stems + (1 | block_ID),
   data = df_leuvul
 )
+summary(m_leuvul3)
+
+
+# take two traits
+# but second best is stems
+# so take third best = # leaves log
+m_leuvul2 <- lmerTest::lmer(
+  log_biomass ~ log_no_stems * log_number_leaves + (1 | block_ID),
+  data = df_leuvul
+)
+summary(m_leuvul2)
+
+# final model for leuvul --------------------------------------------------
+m_leuvul <- lmerTest::lmer(
+  log_biomass ~ log_no_stems + log_number_leaves + (1 | block_ID),
+  data = df_leuvul
+)
 summary(m_leuvul)
+
+AIC(m_leuvul, m_leuvul2, m_leuvul3)
+
 
 # tripra ------------------------------------------------------------------
 df_tripra <- analysis_data_24_log |> filter(species == "tripra")
@@ -400,12 +426,33 @@ AIC(
 # top_models_species[["tripra"]][["additive"]]     5 387.1187
 # top_models_species[["tripra"]][["interaction"]]  6 391.1435
 
-# final model for tripra --------------------------------------------------
-m_tripra <- lmerTest::lmer(
+m_tripra3 <- lmerTest::lmer(
   log_biomass ~ log_height_reproductive_str  + (1 | block_ID),
   data = df_tripra
 )
+summary(m_tripra3)
+
+m_tripra2 <- lmerTest::lmer(
+  log_biomass ~ log_height_reproductive_str + log_no_stems + (1 | block_ID),
+  data = df_tripra
+)
+summary(m_tripra2)
+
+m_tripra <- lmerTest::lmer(
+  log_biomass ~ log_height_reproductive_str * log_no_stems + (1 | block_ID),
+  data = df_tripra
+)
 summary(m_tripra)
+AIC(m_tripra3, m_tripra2, m_tripra)
+
+# final model for tripra --------------------------------------------------
+m_tripra <- lmerTest::lmer(
+  log_biomass ~ log_height_reproductive_str + log_no_stems + (1 | block_ID),
+  data = df_tripra
+)
+summary(m_tripra)
+# adding log no stems as second trait actually improves the model
+# second best before was no stems which is why the single model was the best fit before
 
 
 # hypmac ------------------------------------------------------------------
@@ -473,12 +520,33 @@ AIC(
 # top_models_species[["cyncri"]][["additive"]]     5 216.3082
 # top_models_species[["cyncri"]][["interaction"]]  6 214.3393
 
-# final model for cyncri --------------------------------------------------
-m_cyncri <- lmerTest::lmer(
+m_cyncri3 <- lmerTest::lmer(
   log_biomass ~ log_no_stems + (1 | block_ID),
   data = df_cyncri
 )
+summary(m_cyncri3)
+
+m_cyncri2 <- lmerTest::lmer(
+  log_biomass ~ log_no_stems + log_number_leaves + (1 | block_ID),
+  data = df_cyncri
+)
+summary(m_cyncri2)
+
+m_cyncri <- lmerTest::lmer(
+  log_biomass ~ log_no_stems * log_number_leaves + (1 | block_ID),
+  data = df_cyncri
+)
 summary(m_cyncri)
+
+AIC(m_cyncri3, m_cyncri2, m_cyncri)
+# final model for cyncri --------------------------------------------------
+m_cyncri <- lmerTest::lmer(
+  log_biomass ~ log_no_stems * log_number_leaves + (1 | block_ID),
+  data = df_cyncri
+)
+summary(m_cyncri)
+# use the interactive model 
+# first thought that the additive model is causing a split in the biomass
 
 # sildio ------------------------------------------------------------------
 df_sildio <- analysis_data_24_log |> filter(species == "sildio")
@@ -497,18 +565,32 @@ AIC(
 # top_models_species[["sildio"]][["additive"]]     4 17.92125
 # top_models_species[["sildio"]][["interaction"]]  4 17.92125
 
-# final model for sildio --------------------------------------------------
-m_sildio <- lmerTest::lmer(
+m_sildio3 <- lmerTest::lmer(
   log_biomass ~ log_number_leaves + (1 | block_ID),
+  data = df_sildio
+)
+summary(m_sildio3)
+
+m_sildio2 <- lmerTest::lmer(
+  log_biomass ~ log_number_leaves + log_height_reproductive_str + (1 | block_ID),
+  data = df_sildio
+)
+summary(m_sildio2)
+
+m_sildio <- lmerTest::lmer(
+  log_biomass ~ log_number_leaves * log_height_reproductive_str + (1 | block_ID),
   data = df_sildio
 )
 summary(m_sildio)
 
+AIC(m_sildio3, m_sildio2, m_sildio)
 
-
-
-
-
+# final model for sildio --------------------------------------------------
+m_sildio <- lmerTest::lmer(
+  log_biomass ~ log_number_leaves * log_height_reproductive_str + (1 | block_ID),
+  data = df_sildio
+)
+summary(m_sildio)
 
 
 
