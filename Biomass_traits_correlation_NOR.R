@@ -117,17 +117,6 @@ glimpse(biomass_NOR)
 
 
 
-# # change to numeric and . -------------------------------------------------
-# biomass_NOR <- biomass_NOR |> 
-#   mutate(
-#     across(
-#       starts_with("dry_weight"),
-#       ~ .x |>
-#         str_replace(",", ".") |>
-#         as.numeric()
-#     )
-#   )
-#   
 # combined treatment column -----------------------------------------------
 biomass_NOR$treatment <- paste(biomass_NOR$site, biomass_NOR$treat_warming, 
                                biomass_NOR$treat_competition, sep = "_")

@@ -1,7 +1,10 @@
 
 # BIOMASS 13 ---------------------------------------------------------------
 
- # the best model option for effect of cooling: m_flower_number_cool_bio_nb_species
+
+#  final figure of effect of cooling on flower number: p_bio_nb_species ---------------------
+
+# the best model option for effect of cooling: m_flower_number_cool_bio_nb_species
 
 # Effect of cooling on flower number glmer.nb -------------------------------------
 # negative binomial model is better for our data
@@ -64,8 +67,7 @@ summary(m_flower_number_cool_bio)
 
 
 
-# pr ----------------------------------------------------------------------
-
+# predict number of flowers ----------------------------------------------------------------------
 
 emm_fl_num_cool_bio_nb_species <- emmeans(
   m_flower_number_cool_bio_nb_species,
@@ -111,7 +113,7 @@ contr_comp_bio_nb_species <- contrast(
 
 
 
-# this plot works ---------------------------------------------------------
+# final plot ---------------------------------------------------------
 dodge  <- position_dodge(width = 0.3)
 offset <- 0.3 / 2
 
@@ -187,7 +189,7 @@ p_bio_nb_species <- ggplot() +
   scale_color_manual(values = c("#528B8B", "#CD950C"))
 p_bio_nb_species
 
-# ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_species_models_glmer.nb_2.png", 
+# ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_species_models_glmer.nb_3.png", 
 #        plot = p_bio_nb_species, width = 10, height = 8, units = "in")
 
 

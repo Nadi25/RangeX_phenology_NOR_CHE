@@ -39,11 +39,11 @@ colors2 <- c(
 # load library ------------------------------------------------------------
 library(ggeffects)
 
-theme_set(theme_bw(base_size = 22))
-
 
 # source script that predicts the 23 biomass
 source("Biomass_prediction_for_23_per_species.R")
+
+theme_set(theme_bw(base_size = 22))
 
 
 # use

@@ -3,6 +3,10 @@
 
 
 # library -----------------------------------------------------------------
+library(conflicted)
+conflict_prefer_all("dplyr", quiet = TRUE)
+library(tidyverse)
+
 library(lmerTest)
 conflicts_prefer(lmerTest::lmer)
 
