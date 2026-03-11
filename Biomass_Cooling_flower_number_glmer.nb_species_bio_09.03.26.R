@@ -20,9 +20,10 @@
 library(performance)
 
 # Use glmer.nb model ------------------------------------------------------
-
+source("Biomass_phenology_combine_species_models.R")
 source("Biomass_Cooling_flower_number_04.03.26.R")
 
+source("Biomass_Cooling_flower_number_glmer.nb_06.03.26.R")
 
 
 # add predicted species biomass to pheno data -------------------------------------
@@ -132,7 +133,7 @@ ann_comp_bio_nb_species <- contr_comp_bio_nb_species |>
     site_x = as.numeric(factor(site, levels = site_levels)),
     xmin = site_x - offset,
     xmax = site_x + offset,
-    y = y_max + (nrow(ann_site_bio_nb) + row_number()) * spacing,
+    y = y_max + (nrow(ann_site_bio_nb_species) + row_number()) * spacing,
     label = sig
   )
 
@@ -186,8 +187,8 @@ p_bio_nb_species <- ggplot() +
   scale_color_manual(values = c("#528B8B", "#CD950C"))
 p_bio_nb_species
 
-ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_species_models_glmer.nb_2.png", 
-       plot = p_bio_nb_species, width = 10, height = 8, units = "in")
+# ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_species_models_glmer.nb_2.png", 
+#        plot = p_bio_nb_species, width = 10, height = 8, units = "in")
 
 
 # check slopes of species
