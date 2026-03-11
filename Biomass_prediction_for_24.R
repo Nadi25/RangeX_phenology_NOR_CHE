@@ -12,7 +12,7 @@
 # maybe species models is slightly better
 # for 7/10 species 
 
-
+theme_set(theme_bw(base_size = 22))
 
 # colors ------------------------------------------------------------------
 colors <- c(
@@ -386,10 +386,6 @@ biomass_NOR |>
 
 ## is it the 0 in dry_weight_total_g
 
-ggplot(df_2024_cyncri,
-       aes(pred_log_biomass, log_biomass,
-           color = dry_weight_stem_g > 0)) +
-  geom_point()
 
 biomass_traits_NOR |>
   filter(species == "cyncri") |>
@@ -402,10 +398,6 @@ biomass_traits_NOR |>
   geom_density()
 
 
-ggplot(df_2024_cyncri,
-       aes(pred_log_biomass, log_biomass,
-           color = dry_weight_leaves_g > 0)) +
-  geom_point()
 
 ggplot(df_2024_cyncri,
        aes(pred_log_biomass, log_biomass)) +
@@ -414,12 +406,32 @@ ggplot(df_2024_cyncri,
 
 
 ggplot(df_cyncri,
-       aes(no_stems, dry_weight_total_g)) +
+       aes(log_no_stems, log_biomass)) +
   geom_point()
 
-ggplot(df_cyncri,
-       aes(number_leaves, dry_weight_total_g)) +
+ggplot(biomass_traits_NOR |> 
+         filter(species == "cyncri"),
+       aes(number_leaves, dry_weight_total_g, color = no_stems)) +
   geom_point()
+
+ggplot(biomass_traits_NOR, aes(no_stems, dry_weight_total_g)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(x = "Number of stems",
+       y = "Total dry biomass (g)")
+
+ggplot(
+  biomass_traits_NOR |> 
+    filter(species == "cyncri"),
+  aes(no_stems, dry_weight_total_g)
+) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(
+    x = "Number of stems",
+    y = "Total dry biomass (g)"
+  )
+
 
 ## cyncri 
 
