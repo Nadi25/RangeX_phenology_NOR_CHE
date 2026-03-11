@@ -173,9 +173,9 @@ p_bio_nb <- ggplot() +
   scale_color_manual(values = c("#528B8B", "#CD950C"))
 p_bio_nb
 
-ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_general_model_glmer.nb.png", 
-       plot = p_bio_nb, width = 10, height = 8, units = "in")
-
+# ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass_general_model_glmer.nb.png", 
+#        plot = p_bio_nb, width = 10, height = 8, units = "in")
+# 
 
 
 
