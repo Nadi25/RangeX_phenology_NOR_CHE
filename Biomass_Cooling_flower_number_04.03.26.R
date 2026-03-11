@@ -165,8 +165,9 @@ p_bio
 
 # no sign difference between with and without competition at the high site
 # does this speak for facilitation?
-ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass.png", 
-       plot = p_bio, width = 10, height = 8, units = "in")
+
+# ggsave(filename = "Output/Biomass/Cooling_competition_flower_number_NOR_adjusted_biomass.png", 
+#        plot = p_bio, width = 10, height = 8, units = "in")
 
 # # just log transform the y axis?
 # p_bio +
