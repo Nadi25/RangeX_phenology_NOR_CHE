@@ -13,6 +13,13 @@
 # comment -----------------------------------------------------------------
 # m_stems_height3 is the best model
 
+# lo 1a d3 cennig has # value because leaves is ?
+
+# NOR.hi.warm.bare.wf.04.03.1 tripra hi is 63 g that is high but seems to be correct
+
+# NOR.lo.ambi.vege.wf.08.26.1 cyncri lo has very low biomass 0.002 g but maybe just small plant because just one leaf
+
+
 # load library ------------------------------------------------------------
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
@@ -24,10 +31,16 @@ meta_NOR <- read.csv("Data/RangeX_clean_MetadataFocal_NOR.csv")
 
 
 # import biomass data -------------------------------------------------------------
-biomass_high <- read.csv("Data/Raw/RangeX_raw_NOR_biomass_high_2024.csv")
+biomass_high <- read.csv("Data/Raw/RangeX_raw_NOR_biomass_high_2024_new.csv")
 
-biomass_low <- read.csv("Data/Raw/RangeX_raw_NOR_biomass_low_2024.csv")
+biomass_low <- read.csv("Data/Raw/RangeX_raw_NOR_biomass_low_2024_new.csv")
 
+# remove empty row at end -------------------------------------------------
+biomass_low <- biomass_low |>
+  mutate(across(where(is.character), ~na_if(.x, "")))
+
+biomass_low <- biomass_low |> 
+  filter(!if_all(everything(), is.na))
 
 # add column site ---------------------------------------------------------
 biomass_high <- biomass_high |> 
@@ -36,19 +49,49 @@ biomass_high <- biomass_high |>
 biomass_low <- biomass_low |> 
   mutate(site = "lo")
 
+# change to same as in high to merge
+biomass_low <- biomass_low |> 
+  rename("block" = "f")
+
+biomass_high <- biomass_high |> 
+  rename("block" = "X")
 
 # delete superfluous columns -----------------------------------------------
-biomass_high <- biomass_high |> 
-  select(-c(X.1, X.2, X.3, X.4))
+biomass_high <- biomass_high |>
+  select(-starts_with("X"))
 
-biomass_low <- biomass_low |> 
-  select(-X)
+biomass_low <- biomass_low |>
+  select(-starts_with("X"))
+
+
+
+
+
+
+# biomass_high <- biomass_high |> 
+#   select(-c(X.1, X.2, X.3, X.4))
+# 
+# biomass_low <- biomass_low |> 
+#   select(-X)
 
 # why is there a column f now?
 # this is plot_ID
-# change to same as in high to merge
-biomass_low <- biomass_low |> 
-  rename("X" = "f")
+
+
+# low fix #Value ----------------------------------------------------------
+
+
+
+
+weight_cols <- c(
+  "dry_weight_stem_g",
+  "dry_weight_leaves_g",
+  "dry_weight_flowers_g",
+  "dry_weight_total_g"
+)
+
+biomass_high[weight_cols] <- lapply(biomass_high[weight_cols], \(x) as.numeric(x))
+biomass_low[weight_cols]  <- lapply(biomass_low[weight_cols],  \(x) as.numeric(x))
 
 # combine low and high ----------------------------------------------------
 biomass <- bind_rows(biomass_high, biomass_low)
@@ -57,7 +100,7 @@ biomass <- bind_rows(biomass_high, biomass_low)
 
 # rename columns to match meta --------------------------------------------
 biomass <- biomass |> 
-  rename("block_ID_original" = "X",
+  rename("block_ID_original" = "block",
          "plot_ID_original" = "treat",
          "position_ID_original" = "coord")
 
@@ -71,20 +114,20 @@ biomass_NOR <- left_join(meta_NOR, biomass, by = c("site", "block_ID_original",
 
 # check structure ---------------------------------------------------------
 glimpse(biomass_NOR)
-# weight is all chr
 
 
-# change to numeric and . -------------------------------------------------
-biomass_NOR <- biomass_NOR |> 
-  mutate(
-    across(
-      starts_with("dry_weight"),
-      ~ .x |>
-        str_replace(",", ".") |>
-        as.numeric()
-    )
-  )
-  
+
+# # change to numeric and . -------------------------------------------------
+# biomass_NOR <- biomass_NOR |> 
+#   mutate(
+#     across(
+#       starts_with("dry_weight"),
+#       ~ .x |>
+#         str_replace(",", ".") |>
+#         as.numeric()
+#     )
+#   )
+#   
 # combined treatment column -----------------------------------------------
 biomass_NOR$treatment <- paste(biomass_NOR$site, biomass_NOR$treat_warming, 
                                biomass_NOR$treat_competition, sep = "_")
@@ -107,6 +150,9 @@ ggplot(biomass_NOR, aes(x = dry_weight_total_g, y = dry_weight_leaves_g,
   geom_point()
 
 
+ggplot(biomass_NOR |> filter(species == "cyncri"),
+       aes(dry_weight_total_g)) +
+  geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7)
 
 
 
@@ -281,7 +327,7 @@ biomass_traits_NOR <- biomass_NOR |>
 
 
 
-# plot --------------------------------------------------------------------
+# control plotting --------------------------------------------------------------------
 
 ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = height_vegetative_str))+
   geom_point()
@@ -293,8 +339,55 @@ ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = number_leaves, colour
   geom_point()
 
 ggplot(biomass_traits_NOR, aes(x = dry_weight_total_g, y = number_leaves_tillers, colour =  species))+
-  geom_point()
+  geom_point()+
+  facet_wrap(~ species)+
+  theme(legend.position = "none")
 
+# exclude cennig because it is too large
+ggplot(
+  biomass_traits_NOR |> filter(species != "cennig"),
+  aes(x = dry_weight_total_g, 
+      y = number_leaves_tillers, 
+      colour = species)
+) +
+  geom_point() +
+  facet_wrap(~ species) +
+  theme(legend.position = "none")
+# tripra has an outlier in weight
+
+# cyncri
+ggplot(
+  biomass_traits_NOR |> filter(species == "cyncri"),
+  aes(x = dry_weight_total_g, 
+      y = number_leaves_tillers, 
+      colour = species)) +
+  geom_point() +
+  theme(legend.position = "none")
+
+ggplot(
+  biomass_traits_NOR |> filter(species == "cyncri"),
+  aes(x = dry_weight_total_g, 
+      y = no_stems, 
+      colour = species)) +
+  geom_point() +
+  theme(legend.position = "none")
+
+
+ggplot(
+  biomass_traits_NOR |> filter(species == "cyncri"),
+  aes(no_stems, dry_weight_total_g)) +
+  geom_point() +
+  # scale_y_log10() +
+  # scale_x_log10() +
+  labs(title = "CYNCRI: biomass vs stems")
+
+ggplot(
+  biomass_traits_NOR |> filter(species == "cyncri"),
+  aes(number_leaves_tillers, dry_weight_total_g)) +
+  geom_point() +
+  scale_y_log10() +
+  scale_x_log10() +
+  labs(title = "CYNCRI: biomass vs leaves")
 
 # biomass - trait - regression --------------------------------------------
 
