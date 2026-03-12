@@ -1,6 +1,94 @@
 
+# Effect of cooling through transplantation on flower number NOR glmer.nb ---------------------------------
 
-source("Effect_cooling_on_flower_number_NOR_10.09.25.R")
+## Data used: RangeX_clean_Phenology_2022_CHE.csv
+##            RangeX_clean_phenology_2023_NOR.csv
+##            RangeX_clean_MetadataFocal_CHE.csv
+##            RangeX_metadata_focal_NOR.csv
+## Date:      11.03.2026
+## Author:    Nadine Arzt
+## Purpose:   Effect of transplantation on flower number NOR with glmer.nb
+
+#source("Effect_cooling_on_flower_number_NOR_10.09.25.R")
+
+
+
+# load library ------------------------------------------------------------
+library(lme4)
+library(ggeffects)
+library(broom.mixed)
+library(emmeans)
+library(lubridate)
+
+
+# load clean phenology data -----------------------------------------------
+source("RangeX_phenology_NOR_CHE_data_combination.R")
+
+# use this data set
+names(phenology)
+
+
+# set theme for plots for presentation ------------------------------------
+theme_set(theme_bw(base_size = 20))
+
+# Filter buds, flowers, infructescences -----------------------------------
+## don't use seeds_collected
+phenology <- phenology |> 
+  filter(phenology$phenology_stage != "No_Seeds")
+
+# combined treatment column -----------------------------------------------
+phenology$treatment <- paste(phenology$site, phenology$treat_warming, phenology$treat_competition, sep = "_")
+
+# change region and treatment names  --------------------------------------
+phenology <- phenology |>
+  mutate(region = case_when(
+    region == "NOR" ~ "Norway",
+    region == "CHE" ~ "Switzerland",
+    TRUE ~ region
+  ))
+
+phenology <- phenology |>
+  mutate(treat_competition = case_when(
+    treat_competition == "bare" ~ "without",
+    treat_competition == "vege" ~ "with",
+    TRUE ~ treat_competition
+  ))
+
+phenology <- phenology |>
+  mutate(treat_warming = case_when(
+    treat_warming == "ambi" ~ "ambient",
+    treat_warming == "warm" ~ "warmed",
+    TRUE ~ treat_warming
+  ))
+
+phenology <- phenology |>
+  mutate(site = case_when(
+    site == "lo" ~ "low",
+    site == "hi" ~ "high",
+    TRUE ~ site
+  ))
+
+# filter only NOR ---------------------------------------------------------
+phenology_NOR <- phenology |> 
+  filter(region == "Norway")
+
+
+# filter only hi ambi and lo -----------------------------------------------
+phenology_NOR_ambi <- phenology_NOR |> 
+  filter(treat_warming == "ambient")
+
+
+# and get julian days --------------------------------------
+phenology_NOR_ambi <- phenology_NOR_ambi |> 
+  mutate(jday = yday(date_measurement),   # Julian day (1–365)
+         jday_scaled = scale(jday))   
+
+
+
+# only flowers ----------------------------------------------------------
+phenology_NOR_ambi_flowers <- phenology_NOR_ambi |> 
+  filter(phenology_stage == "No_FloOpen")
+
 
 # change reference to be low site ----------------------------------------------
 # by factor
