@@ -42,10 +42,11 @@ m_flower_number_warm_bio_nb_species <- glmer.nb(
   value ~ treat_warming * treat_competition + pred_log_biomass_species +
     (1|species) + (1|block_ID),
   data = phenology_NOR_hi_flowers_bio_species,
-  control = glmerControl(optimizer = "bobyqa")
+  control = glmerControl(optimizer = "bobyqa") 
 )
 summary(m_flower_number_warm_bio_nb_species)
 
+#subset = site == "hi"
 
 AIC(m_flower_number_warm_bio_nb_species, m_flower_number_warm_glmer.nb)
 
